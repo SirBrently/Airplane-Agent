@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JetsWest — Sophie AI Widget · Webflow Install Guide</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #060e1a;
+    color: #e4e4e4;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    padding: 0 0 80px;
+  }
+
+  /* ── Header ── */
+  .page-header {
+    background: linear-gradient(135deg, #0e1f3d 0%, #060e1a 100%);
+    border-bottom: 1px solid rgba(201,168,76,0.25);
+    padding: 36px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .page-header-left h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.01em;
+  }
+  .page-header-left h1 span { color: #e8c96a; }
+  .page-header-left p {
+    color: rgba(255,255,255,0.45);
+    font-size: 13px;
+    margin-top: 4px;
+  }
+  .header-badge {
+    background: rgba(201,168,76,0.12);
+    border: 1px solid rgba(201,168,76,0.35);
+    color: #e8c96a;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 20px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* ── Layout ── */
+  .content { max-width: 860px; margin: 0 auto; padding: 48px 24px 0; }
+
+  /* ── Section ── */
+  .section {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 32px 36px;
+    margin-bottom: 24px;
+  }
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .section-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #c9a84c, #e8c96a);
+    color: #060e1a;
+    font-size: 14px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-title h2 {
+    color: #fff;
+    font-size: 17px;
+    font-weight: 600;
+  }
+  .section-title .section-sub {
+    color: rgba(255,255,255,0.4);
+    font-size: 13px;
+    font-weight: 400;
+    margin-left: 4px;
+  }
+
+  /* ── Info grid ── */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .info-item {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .info-item label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .info-item .value {
+    color: #fff;
+    font-size: 13.5px;
+    word-break: break-all;
+  }
+  .info-item .value a {
+    color: #e8c96a;
+    text-decoration: none;
+  }
+  .info-item .value a:hover { text-decoration: underline; }
+  .info-item .value.mono {
+    font-family: 'Courier New', monospace;
+    font-size: 12.5px;
+    color: #e8c96a;
+  }
+
+  /* ── Login credentials ── */
+  .creds-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .cred-field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .cred-field input {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 8px;
+    padding: 10px 13px;
+    color: #fff;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .cred-field input:focus { border-color: rgba(201,168,76,0.6); }
+  .cred-field input::placeholder { color: rgba(255,255,255,0.2); }
+
+  /* ── Steps ── */
+  .steps { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+  .steps li {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .step-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(201,168,76,0.1);
+    border: 1px solid rgba(201,168,76,0.35);
+    color: #e8c96a;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .step-text { color: #d4d4d4; font-size: 14.5px; }
+  .step-text strong { color: #fff; }
+  .step-text .path {
+    display: inline-block;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 5px;
+    padding: 1px 7px;
+    font-size: 12.5px;
+    font-family: 'Courier New', monospace;
+    color: #e8c96a;
+    margin: 0 2px;
+  }
+
+  /* ── Code block ── */
+  .code-block-wrapper {
+    position: relative;
+    margin-top: 8px;
+  }
+  .code-block {
+    width: 100%;
+    height: 280px;
+    background: #020810;
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 10px;
+    padding: 16px;
+    color: #a8d8a8;
+    font-family: 'Courier New', Consolas, monospace;
+    font-size: 11.5px;
+    line-height: 1.6;
+    resize: none;
+    outline: none;
+    overflow: auto;
+  }
+  .copy-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(135deg, #c9a84c, #e8c96a);
+    color: #060e1a;
+    border: none;
+    border-radius: 7px;
+    padding: 7px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+  .copy-btn:hover { opacity: 0.88; transform: scale(1.03); }
+  .copy-btn.copied { background: #4ade80; color: #060e1a; }
+
+  /* ── Note box ── */
+  .note {
+    background: rgba(201,168,76,0.06);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-left: 3px solid #c9a84c;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+    margin-top: 16px;
+  }
+  .note strong { color: #e8c96a; }
+
+  /* ── Preview link ── */
+  .preview-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(201,168,76,0.1);
+    border: 1px solid rgba(201,168,76,0.35);
+    border-radius: 10px;
+    padding: 12px 20px;
+    color: #e8c96a;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s, border-color 0.2s;
+    margin-top: 16px;
+  }
+  .preview-btn:hover { background: rgba(201,168,76,0.18); border-color: rgba(201,168,76,0.6); }
+
+  /* ── Divider ── */
+  hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 4px 0 20px; }
+
+  @media (max-width: 600px) {
+    .page-header { flex-direction: column; align-items: flex-start; padding: 24px 20px; }
+    .info-grid, .creds-grid { grid-template-columns: 1fr; }
+    .section { padding: 24px 20px; }
+    .content { padding: 24px 16px 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>JetsWest Aviation — <span>Sophie AI Widget</span></h1>
+    <p>Webflow Installation Guide &amp; Credentials · Prepared June 2026</p>
+  </div>
+  <div class="header-badge">Ready to Deploy</div>
+</div>
+
+<div class="content">
+
+  <!-- Section 1: Production Details -->
+  <div class="section">
+    <div class="section-title">
+      <div class="section-number">1</div>
+      <h2>Production Details <span class="section-sub">— live backend</span></h2>
+    </div>
+    <div class="info-grid">
+      <div class="info-item">
+        <label>Widget Preview URL</label>
+        <div class="value"><a href="https://jetswest-relay-production.up.railway.app/preview" target="_blank">jetswest-relay-production.up.railway.app/preview</a></div>
+      </div>
+      <div class="info-item">
+        <label>AI Backend (Railway)</label>
+        <div class="value"><a href="https://railway.com" target="_blank">railway.com</a> — Project: jetswest-relay</div>
+      </div>
+      <div class="info-item">
+        <label>Streaming Endpoint</label>
+        <div class="value mono">POST /stream</div>
+      </div>
+      <div class="info-item">
+        <label>Status</label>
+        <div class="value" style="color:#4ade80;">&#x25CF; Online &amp; Responding</div>
+      </div>
+    </div>
+    <div class="note"><strong>Note:</strong> The widget connects to the Railway backend automatically. No API keys or server setup needed on the Webflow side — just paste the code below.</div>
+  </div>
+
+  <!-- Section 2: Webflow Login -->
+  <div class="section">
+    <div class="section-title">
+      <div class="section-number">2</div>
+      <h2>Webflow Login <span class="section-sub">— gojetswest.com</span></h2>
+    </div>
+    <div class="creds-grid">
+      <div class="cred-field">
+        <label>Webflow Account Email</label>
+        <input type="email" placeholder="e.g. admin@gojetswest.com" />
+      </div>
+      <div class="cred-field">
+        <label>Password</label>
+        <input type="password" placeholder="••••••••••••" />
+      </div>
+      <div class="cred-field">
+        <label>Webflow Site</label>
+        <input type="text" value="gojetswest.com" readonly style="opacity:0.6;" />
+      </div>
+      <div class="cred-field">
+        <label>2FA / Notes</label>
+        <input type="text" placeholder="e.g. Authenticator app on Stan's phone" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3: Installation Steps -->
+  <div class="section">
+    <div class="section-title">
+      <div class="section-number">3</div>
+      <h2>How to Install in Webflow <span class="section-sub">— 4 steps</span></h2>
+    </div>
+    <ol class="steps">
+      <li>
+        <div class="step-dot">1</div>
+        <div class="step-text">Log in to <strong>webflow.com</strong> and open the <strong>gojetswest.com</strong> project.</div>
+      </li>
+      <li>
+        <div class="step-dot">2</div>
+        <div class="step-text">In the left sidebar, click the <strong>&#9881; (Settings)</strong> icon, then navigate to <span class="path">Custom Code</span>.</div>
+      </li>
+      <li>
+        <div class="step-dot">3</div>
+        <div class="step-text">Scroll to the <strong>"Footer Code"</strong> section (labeled <em>"Before &lt;/body&gt; tag"</em>). Paste the entire widget code from Section 4 below into that box.</div>
+      </li>
+      <li>
+        <div class="step-dot">4</div>
+        <div class="step-text">Click <strong>Save Changes</strong>, then go to <span class="path">Publish</span> → <strong>Publish to gojetswest.com</strong>. Sophie will appear in the bottom-right corner within seconds.</div>
+      </li>
+    </ol>
+    <div class="note"><strong>Tip:</strong> If you want to test on a single page first before site-wide publish, open any page in the Webflow Designer → <strong>Page Settings</strong> → <strong>Custom Code</strong> → paste into the "Before &lt;/body&gt; tag" field for that page only.</div>
+  </div>
+
+  <!-- Section 4: Widget Code -->
+  <div class="section">
+    <div class="section-title">
+      <div class="section-number">4</div>
+      <h2>Widget Code <span class="section-sub">— copy &amp; paste into Webflow</span></h2>
+    </div>
+    <div class="code-block-wrapper">
+      <textarea class="code-block" id="widget-code" spellcheck="false" readonly></textarea>
+      <button class="copy-btn" id="copy-btn" onclick="copyCode()">Copy Code</button>
+    </div>
+    <div class="note"><strong>Do not modify this code.</strong> The widget connects to the live JetsWest AI backend. Any changes to the endpoint URL or secret key will break the integration. If an update is needed, contact the developer.</div>
+  </div>
+
+  <!-- Section 5: What Sophie Does -->
+  <div class="section">
+    <div class="section-title">
+      <div class="section-number">5</div>
+      <h2>What Sophie Does <span class="section-sub">— feature overview</span></h2>
+    </div>
+    <hr>
+    <ol class="steps">
+      <li>
+        <div class="step-dot" style="background:rgba(74,222,128,0.1);border-color:rgba(74,222,128,0.4);color:#4ade80;">✓</div>
+        <div class="step-text"><strong>Greets visitors</strong> with a pop-up bubble and 5 quick-reply topics after 1.5 seconds.</div>
+      </li>
+      <li>
+        <div class="step-dot" style="background:rgba(74,222,128,0.1);border-color:rgba(74,222,128,0.4);color:#4ade80;">✓</div>
+        <div class="step-text"><strong>Streams responses</strong> word-by-word using Claude AI — feels like a real conversation, not a loading spinner.</div>
+      </li>
+      <li>
+        <div class="step-dot" style="background:rgba(74,222,128,0.1);border-color:rgba(74,222,128,0.4);color:#4ade80;">✓</div>
+        <div class="step-text"><strong>Shows aircraft cards</strong> with photos, specs, and price whenever inventory is mentioned.</div>
+      </li>
+      <li>
+        <div class="step-dot" style="background:rgba(74,222,128,0.1);border-color:rgba(74,222,128,0.4);color:#4ade80;">✓</div>
+        <div class="step-text"><strong>Suggests follow-up questions</strong> after every reply to keep prospects engaged.</div>
+      </li>
+      <li>
+        <div class="step-dot" style="background:rgba(74,222,128,0.1);border-color:rgba(74,222,128,0.4);color:#4ade80;">✓</div>
+        <div class="step-text"><strong>Remembers the conversation</strong> for the session — no repeating yourself.</div>
+      </li>
+      <li>
+        <div class="step-dot" style="background:rgba(74,222,128,0.1);border-color:rgba(74,222,128,0.4);color:#4ade80;">✓</div>
+        <div class="step-text"><strong>Drives Zoom bookings</strong> at <strong>gojetswest.com/booking-calander</strong> — every conversation pushes toward a call with Stan.</div>
+      </li>
+      <li>
+        <div class="step-dot" style="background:rgba(74,222,128,0.1);border-color:rgba(74,222,128,0.4);color:#4ade80;">✓</div>
+        <div class="step-text"><strong>Mobile responsive</strong> — expands to full-screen height on small devices.</div>
+      </li>
+    </ol>
+    <a class="preview-btn" href="https://jetswest-relay-production.up.railway.app/preview" target="_blank">
+      ✈ &nbsp;Open Live Preview
+    </a>
+  </div>
+
+</div>
+
+<script>
+// Widget code stored here — injected into the textarea on load
+const WIDGET_CODE = `<!-- JetsWest AI Chat Widget — paste into Webflow Custom Code (before </body>) -->
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+  #jw-widget * { box-sizing: border-box; margin: 0; padding: 0; }
+  #jw-widget {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 99999;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  /* ── Help Bubble ── */
+  #jw-bubble {
+    position: absolute;
+    bottom: 78px;
+    right: 0;
+    width: 230px;
+    background: #0c1626;
+    border: 1px solid rgba(201,168,76,0.4);
+    border-radius: 14px;
+    padding: 13px 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+    cursor: pointer;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  #jw-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    right: 22px;
+    width: 14px;
+    height: 14px;
+    background: #0c1626;
+    border-right: 1px solid rgba(201,168,76,0.4);
+    border-bottom: 1px solid rgba(201,168,76,0.4);
+    transform: rotate(45deg);
+  }
+  #jw-bubble.hidden { opacity: 0; transform: translateY(8px); pointer-events: none; }
+  #jw-bubble-text { color: #e4e4e4; font-size: 13px; line-height: 1.5; padding-right: 18px; }
+  #jw-bubble-text strong { color: #e8c96a; }
+  #jw-bubble-dismiss {
+    position: absolute; top: 8px; right: 10px; background: none; border: none;
+    color: rgba(255,255,255,0.3); font-size: 14px; cursor: pointer; line-height: 1;
+    padding: 2px; transition: color 0.2s;
+  }
+  #jw-bubble-dismiss:hover { color: #c9a84c; }
+
+  /* ── Toggle Button ── */
+  #jw-toggle {
+    width: 66px; height: 66px; border-radius: 50%;
+    background: linear-gradient(145deg, #1b2e55, #0c1626);
+    border: 2px solid #c9a84c; cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    box-shadow: 0 6px 24px rgba(201,168,76,0.35);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    margin-left: auto; position: relative;
+  }
+  #jw-toggle:hover { transform: scale(1.07); box-shadow: 0 8px 30px rgba(201,168,76,0.5); }
+  #jw-toggle .icon-close { display: none; }
+  #jw-toggle .icon-chat { animation: jwIconPulse 2s ease-in-out infinite; }
+  @keyframes jwIconPulse { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(201,168,76,0.3)); } 50% { transform: scale(1.22); filter: drop-shadow(0 0 8px rgba(201,168,76,1)); } }
+  #jw-toggle.pulse::before {
+    content: ''; position: absolute; inset: -4px; border-radius: 50%;
+    border: 2px solid rgba(201,168,76,0.5); animation: jwPulse 2s ease-out infinite;
+  }
+  @keyframes jwPulse { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(1.4); opacity: 0; } }
+  #jw-badge {
+    position: absolute; top: -3px; right: -3px; width: 18px; height: 18px;
+    background: #e8c96a; color: #0c1626; border-radius: 50%; font-size: 10px;
+    font-weight: 700; display: none; align-items: center; justify-content: center;
+    border: 2px solid #0c1626;
+  }
+
+  /* ── Window ── */
+  #jw-window {
+    position: absolute; bottom: 78px; right: 0; width: 375px; height: 560px;
+    background: #0c1626; border: 1px solid rgba(201,168,76,0.25); border-radius: 20px;
+    display: none; flex-direction: column; overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.65); animation: jwSlideUp 0.25s ease;
+  }
+  #jw-window.open { display: flex; }
+  @keyframes jwSlideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── Header ── */
+  #jw-header {
+    background: linear-gradient(135deg, #1b2e55 0%, #0e1f3d 100%);
+    border-bottom: 1px solid rgba(201,168,76,0.2);
+    padding: 14px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+  }
+  #jw-header-avatar {
+    width: 56px; height: 56px; border-radius: 50%;
+    border: 2px solid rgba(201,168,76,0.5);
+    background: linear-gradient(135deg, #1b2e55, #0c1626);
+    overflow: hidden; flex-shrink: 0;
+  }
+  #jw-header-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
+  #jw-header-info { flex: 1; min-width: 0; }
+  #jw-header-info h3 { color: #fff; font-size: 15px; font-weight: 600; letter-spacing: 0.02em; }
+  #jw-header-info .jw-status { display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+  #jw-header-info .jw-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; flex-shrink: 0; }
+  #jw-header-info .jw-status-text { color: rgba(255,255,255,0.55); font-size: 11.5px; }
+  #jw-close {
+    background: none; border: none; color: rgba(255,255,255,0.35); cursor: pointer;
+    font-size: 22px; line-height: 1; padding: 4px; transition: color 0.2s; flex-shrink: 0;
+  }
+  #jw-close:hover { color: #c9a84c; }
+
+  /* ── Messages ── */
+  #jw-messages {
+    flex: 1; overflow-y: auto; padding: 16px 14px;
+    display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth;
+  }
+  #jw-messages::-webkit-scrollbar { width: 4px; }
+  #jw-messages::-webkit-scrollbar-track { background: transparent; }
+  #jw-messages::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.25); border-radius: 4px; }
+  .jw-msg { max-width: 86%; padding: 11px 14px; border-radius: 16px; font-size: 15px; line-height: 1.65; word-break: break-word; }
+  .jw-msg.bot { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.09); color: #e4e4e4; border-bottom-left-radius: 4px; align-self: flex-start; }
+  .jw-msg.user { background: linear-gradient(135deg, #1b2e55, #243a6b); border: 1px solid rgba(201,168,76,0.3); color: #fff; border-bottom-right-radius: 4px; align-self: flex-end; }
+  .jw-msg.bot strong { color: #e8c96a; font-weight: 600; }
+  .jw-msg.bot em { color: rgba(255,255,255,0.75); font-style: italic; }
+  .jw-msg.bot a { color: #e8c96a; text-decoration: underline; text-underline-offset: 2px; }
+  .jw-msg.bot a:hover { color: #fff; }
+  .jw-msg.bot ul { list-style: none; margin-top: 6px; display: flex; flex-direction: column; gap: 4px; }
+  .jw-msg.bot ul li::before { content: '›'; color: #c9a84c; font-weight: 700; margin-right: 6px; }
+  .jw-msg.bot ul li { color: #e4e4e4; }
+  .jw-typing { display: flex; align-items: center; gap: 5px; padding: 12px 14px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.09); border-radius: 16px; border-bottom-left-radius: 4px; align-self: flex-start; width: fit-content; }
+  .jw-typing span { width: 7px; height: 7px; background: #c9a84c; border-radius: 50%; animation: jwBounce 1.2s infinite; opacity: 0.7; }
+  .jw-typing span:nth-child(2) { animation-delay: 0.2s; }
+  .jw-typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes jwBounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.7; } 30% { transform: translateY(-6px); opacity: 1; } }
+
+  /* ── Nav Bar ── */
+  #jw-nav-bar { display: flex; gap: 7px; padding: 7px 13px; border-top: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.12); flex-shrink: 0; }
+  .jw-nav-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.45); font-size: 12px; font-family: inherit; padding: 5px 13px; border-radius: 20px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .jw-nav-btn:hover { background: rgba(201,168,76,0.1); border-color: rgba(201,168,76,0.35); color: #e8c96a; }
+
+  /* ── Input ── */
+  #jw-input-row { padding: 11px 13px; border-top: 1px solid rgba(201,168,76,0.12); display: flex; gap: 9px; align-items: flex-end; background: rgba(0,0,0,0.15); flex-shrink: 0; }
+  #jw-input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(201,168,76,0.2); border-radius: 11px; padding: 10px 13px; color: #fff; font-size: 13.5px; font-family: inherit; resize: none; outline: none; line-height: 1.45; max-height: 100px; transition: border-color 0.2s; }
+  #jw-input::placeholder { color: rgba(255,255,255,0.28); }
+  #jw-input:focus { border-color: rgba(201,168,76,0.5); }
+  #jw-send { width: 40px; height: 40px; border-radius: 11px; background: linear-gradient(135deg, #c9a84c, #e8c96a); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: opacity 0.2s, transform 0.15s; }
+  #jw-send:hover { opacity: 0.88; transform: scale(1.05); }
+  #jw-send:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+  /* ── Quick Replies ── */
+  #jw-quick-replies { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 10px; width: 100%; }
+  .jw-quick-btn { background: rgba(201,168,76,0.07); border: 1px solid rgba(201,168,76,0.35); border-radius: 12px; color: #ffffff; font-size: 15px; font-family: inherit; font-weight: 500; padding: 16px 20px; cursor: pointer; text-align: center; display: block; width: 78%; transition: background 0.18s, border-color 0.18s, transform 0.12s; letter-spacing: 0.01em; line-height: 1.3; }
+  .jw-quick-btn:hover { background: rgba(201,168,76,0.18); border-color: rgba(201,168,76,0.7); transform: scale(1.03); }
+
+  /* ── Inventory ── */
+  .jw-inv-list { display: flex; flex-direction: column; gap: 7px; margin: 6px 0; width: 100%; }
+  .jw-inv-item { background: rgba(201,168,76,0.06); border: 1px solid rgba(201,168,76,0.18); border-radius: 10px; padding: 9px 12px; font-size: 13.5px; color: #e8e8e8; line-height: 1.4; }
+  .jw-inv-item strong { color: #e8c96a; }
+  .jw-inv-stats { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 3px; letter-spacing: 0.01em; }
+  .jw-timestamp { font-size: 10.5px; color: rgba(255,255,255,0.25); text-align: center; margin: 2px 0 4px; letter-spacing: 0.02em; }
+
+  /* ── Plane Cards ── */
+  .jw-plane-card-img.loading { background: linear-gradient(90deg, #1a2744 25%, #243a6b 50%, #1a2744 75%); background-size: 200% 100%; animation: jwShimmer 1.4s infinite; }
+  @keyframes jwShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  .jw-cards-row { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 4px; }
+  .jw-plane-card { background: linear-gradient(160deg, #1a2a4a 0%, #0c1626 100%); border: 1px solid rgba(201,168,76,0.3); border-radius: 14px; overflow: hidden; width: 100%; }
+  .jw-plane-card-img { width: 100%; height: 150px; object-fit: cover; display: block; background: #1a2744; }
+  .jw-plane-card-body { padding: 12px 14px 14px; }
+  .jw-plane-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+  .jw-plane-card-name { color: #fff; font-size: 14.5px; font-weight: 600; line-height: 1.3; }
+  .jw-plane-card-price { color: #e8c96a; font-size: 17px; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+  .jw-plane-card-badge { display: inline-block; background: rgba(201,168,76,0.12); border: 1px solid rgba(201,168,76,0.28); color: #c9a84c; font-size: 10.5px; font-weight: 500; padding: 2px 9px; border-radius: 20px; margin-bottom: 9px; letter-spacing: 0.02em; }
+  .jw-plane-card-specs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 11px; }
+  .jw-plane-spec-chip { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.65); font-size: 11px; padding: 3px 9px; border-radius: 6px; }
+  .jw-plane-card-cta { width: 100%; background: linear-gradient(135deg, #c9a84c, #e8c96a); color: #0c1626; border: none; border-radius: 9px; padding: 10px; font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 0.02em; transition: opacity 0.2s, transform 0.15s; }
+  .jw-plane-card-cta:hover { opacity: 0.88; transform: scale(1.01); }
+
+  /* ── Suggestion Chips ── */
+  .jw-suggestion-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; padding: 0 2px; }
+  .jw-chip-btn { background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.3); border-radius: 20px; color: #e8c96a; font-size: 12px; font-family: inherit; padding: 5px 12px; cursor: pointer; transition: background 0.15s, border-color 0.15s; white-space: nowrap; }
+  .jw-chip-btn:hover { background: rgba(201,168,76,0.18); border-color: rgba(201,168,76,0.6); }
+
+  #jw-footer { text-align: center; padding: 6px 0 8px; font-size: 10.5px; color: rgba(255,255,255,0.18); letter-spacing: 0.03em; flex-shrink: 0; }
+  @media (max-width: 420px) { #jw-window { width: calc(100vw - 24px); right: 0; height: 80vh; } #jw-widget { bottom: 16px; right: 12px; } }
+</style>
+
+<div id="jw-widget">
+  <div id="jw-window">
+    <div id="jw-header">
+      <div id="jw-header-avatar">
+        <img src="https://images.pexels.com/photos/8171192/pexels-photo-8171192.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop&crop=faces" alt="Sophie" loading="eager" />
+      </div>
+      <div id="jw-header-info">
+        <h3>Sophie · JetsWest Aviation</h3>
+        <div class="jw-status">
+          <div class="jw-dot"></div>
+          <span class="jw-status-text">Aviation Specialist · Online</span>
+        </div>
+      </div>
+      <button id="jw-close" title="Close">✕</button>
+    </div>
+    <div id="jw-messages"></div>
+    <div id="jw-nav-bar">
+      <button class="jw-nav-btn" id="jw-btn-back">← Back</button>
+      <button class="jw-nav-btn" id="jw-btn-menu">🏠 Main Menu</button>
+    </div>
+    <div id="jw-input-row">
+      <textarea id="jw-input" rows="1" placeholder="Ask about aircraft, pricing, or your mission…"></textarea>
+      <button id="jw-send">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0c1626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </div>
+    <div id="jw-footer">Powered by JetsWest AI</div>
+  </div>
+  <div id="jw-bubble" class="hidden">
+    <button id="jw-bubble-dismiss" title="Dismiss">✕</button>
+    <p id="jw-bubble-text"><strong>Hi, I'm Sophie!</strong> Looking to buy, sell, or finance an aircraft? I can help.</p>
+  </div>
+  <button id="jw-toggle" title="Chat with Sophie" class="pulse">
+    <div id="jw-badge"></div>
+    <svg class="icon-chat" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+    </svg>
+    <svg class="icon-close" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="2.5" stroke-linecap="round">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+  </button>
+</div>
+
+<script>
+(function () {
+  const WEBHOOK = 'https://jetswest-relay-production.up.railway.app/stream';
+  const SECRET  = 'jetswest_webhook_2024';
+  let sessionId = localStorage.getItem('jw_session');
+  if (!sessionId) { sessionId = 'jw-' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('jw_session', sessionId); }
+  const toggle = document.getElementById('jw-toggle');
+  const iconChat = toggle.querySelector('.icon-chat');
+  const iconClose = toggle.querySelector('.icon-close');
+  const badge = document.getElementById('jw-badge');
+  const window_ = document.getElementById('jw-window');
+  const closeBtn = document.getElementById('jw-close');
+  const messages = document.getElementById('jw-messages');
+  const input = document.getElementById('jw-input');
+  const send = document.getElementById('jw-send');
+  const bubble = document.getElementById('jw-bubble');
+  const bubbleDismiss = document.getElementById('jw-bubble-dismiss');
+  let isOpen = false, greeted = false, bubbleDismissed = false, unreadCount = 0;
+  const placeholders = ['Ask about aircraft, pricing, or your mission…','What\\'s your passenger count and range?','Looking to buy, sell, or finance?','Ask about off-market inventory…','What\\'s your budget range?'];
+  let phIndex = 0;
+  setInterval(() => { if (!isOpen) return; phIndex = (phIndex + 1) % placeholders.length; input.placeholder = placeholders[phIndex]; }, 4000);
+  setTimeout(() => bubble.classList.remove('hidden'), 1500);
+  bubble.addEventListener('click', () => { bubble.classList.add('hidden'); openChat(); });
+  bubbleDismiss.addEventListener('click', (e) => { e.stopPropagation(); bubbleDismissed = true; bubble.classList.add('hidden'); });
+  function openChat() {
+    isOpen = true; unreadCount = 0; badge.style.display = 'none'; badge.textContent = ''; toggle.classList.remove('pulse');
+    window_.classList.add('open'); iconChat.style.display = 'none'; iconClose.style.display = 'block'; bubble.classList.add('hidden'); input.focus();
+    if (!greeted) { greeted = true; appendBot("JetsWest Aviation here. What can I help you with today?"); appendQuickReplies(['Aircraft Finance & Funding','Sell or List Your Airplane','Sourcing & Acquisitions','Cash Flowing Leasebacks','Off-Market Quiet Transactions']); }
+  }
+  function closeChat() { isOpen = false; window_.classList.remove('open'); iconChat.style.display = 'block'; iconClose.style.display = 'none'; if (!bubbleDismissed) bubble.classList.remove('hidden'); }
+  toggle.addEventListener('click', () => isOpen ? closeChat() : openChat());
+  closeBtn.addEventListener('click', closeChat);
+  document.getElementById('jw-btn-back').addEventListener('click', () => {
+    const kids = Array.from(messages.children);
+    for (let i = kids.length - 1; i >= 0; i--) { const el = kids[i]; if (el.classList.contains('jw-cards-row') || el.classList.contains('jw-timestamp')) { el.remove(); continue; } if (el.classList.contains('jw-msg') && el.classList.contains('bot')) { el.remove(); break; } break; }
+  });
+  document.getElementById('jw-btn-menu').addEventListener('click', () => {
+    messages.innerHTML = ''; greeted = false; unreadCount = 0; badge.style.display = 'none';
+    sessionId = 'jw-' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('jw_session', sessionId); openChat();
+  });
+  function renderMarkdown(text) {
+    let html = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    html = html.replace(/\\[([^\\]]+)\\]\\((https?:\\/\\/[^\\)]+)\\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+    html = html.replace(/(^|[\\s])(https?:\\/\\/[^\\s<]+)/g,'$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+    html = html.replace(/\\*\\*(.+?)\\*\\*/g,'<strong>$1</strong>').replace(/\\*(.+?)\\*/g,'<em>$1</em>');
+    html = html.replace(/^\\|.+\\|$/gm,'').replace(/^\\|[-| :]+\\|$/gm,'');
+    const lines = html.split('\\n'); const out = []; let inList = false, inInventory = false;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]; const trimmed = line.trim();
+      if (/^[✈🔩🛩🚁]/.test(trimmed)) {
+        if (!inInventory) { if (inList) { out.push('</ul>'); inList = false; } out.push('<div class="jw-inv-list">'); inInventory = true; }
+        const nextLine = (lines[i+1]||'').trim(); const hasStats = nextLine && !/^[✈🔩🛩🚁\\*#-]/.test(nextLine) && nextLine !== '';
+        out.push('<div class="jw-inv-item">'+trimmed+(hasStats?'<div class="jw-inv-stats">'+nextLine+'</div>':'')+'</div>');
+        if (hasStats) i++; continue;
+      }
+      if (inInventory && trimmed === '') { continue; }
+      if (inInventory) { out.push('</div>'); inInventory = false; }
+      const bullet = trimmed.match(/^[-•]\\s+(.+)/);
+      if (bullet) { if (!inList) { out.push('<ul>'); inList = true; } out.push('<li>'+bullet[1]+'</li>'); }
+      else { if (inList) { out.push('</ul>'); inList = false; } if (trimmed) out.push(trimmed); else out.push(''); }
+    }
+    if (inList) out.push('</ul>'); if (inInventory) out.push('</div>');
+    return out.join('\\n').replace(/\\n{2,}/g,'</p><p>').replace(/\\n/g,'<br>');
+  }
+  function addTimestamp() { const ts = document.createElement('div'); ts.className = 'jw-timestamp'; ts.textContent = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); messages.appendChild(ts); }
+  function appendBot(text) {
+    addTimestamp(); const div = document.createElement('div'); div.className = 'jw-msg bot'; div.innerHTML = renderMarkdown(text); messages.appendChild(div);
+    setTimeout(() => div.scrollIntoView({behavior:'smooth',block:'start'}),50);
+    if (!isOpen) { unreadCount++; badge.textContent = unreadCount; badge.style.display = 'flex'; toggle.classList.add('pulse'); }
+    return div;
+  }
+  function appendUser(text) { const div = document.createElement('div'); div.className = 'jw-msg user'; div.textContent = text; messages.appendChild(div); messages.scrollTop = messages.scrollHeight; return div; }
+  function renderCards(cards) {
+    if (!cards||!cards.length) return;
+    const row = document.createElement('div'); row.className = 'jw-cards-row';
+    cards.forEach(c => {
+      const card = document.createElement('div'); card.className = 'jw-plane-card';
+      card.innerHTML = '<img class="jw-plane-card-img loading" src="'+c.image+'" alt="'+c.name+'" loading="lazy" onload="this.classList.remove(\\'loading\\')" onerror="this.classList.remove(\\'loading\\');this.style.background=\\'#1a2744\\';this.style.minHeight=\\'150px\\'"/><div class="jw-plane-card-body"><div class="jw-plane-card-top"><div><div class="jw-plane-card-name">'+c.year+' '+c.name+'</div></div><div class="jw-plane-card-price">'+c.price+'</div></div><div class="jw-plane-card-badge">'+c.category+'</div><div class="jw-plane-card-specs">'+c.specs.map(s=>'<span class="jw-plane-spec-chip">'+s+'</span>').join('')+'</div><button class="jw-plane-card-cta">Inquire About This Aircraft</button></div>';
+      card.querySelector('.jw-plane-card-cta').addEventListener('click',()=>{ input.value='I\\'d like to learn more about the '+c.year+' '+c.name; sendMessage(); });
+      row.appendChild(card);
+    });
+    messages.appendChild(row); setTimeout(()=>row.firstChild.scrollIntoView({behavior:'smooth',block:'start'}),50);
+  }
+  function appendQuickReplies(options) {
+    const wrapper = document.createElement('div'); wrapper.id = 'jw-quick-replies';
+    options.forEach(label => { const btn = document.createElement('button'); btn.className = 'jw-quick-btn'; btn.textContent = label; btn.addEventListener('click',()=>{ wrapper.remove(); input.value=label; sendMessage(); }); wrapper.appendChild(btn); });
+    messages.appendChild(wrapper); messages.scrollTop = messages.scrollHeight;
+  }
+  function appendSuggestionChips(items) {
+    if (!items||!items.length) return;
+    const wrapper = document.createElement('div'); wrapper.className = 'jw-suggestion-chips';
+    items.forEach(label => { const btn = document.createElement('button'); btn.className = 'jw-chip-btn'; btn.textContent = label; btn.addEventListener('click',()=>{ wrapper.remove(); input.value=label; sendMessage(); }); wrapper.appendChild(btn); });
+    messages.appendChild(wrapper); messages.scrollTop = messages.scrollHeight;
+  }
+  function showTyping() { const t = document.createElement('div'); t.className = 'jw-typing'; t.innerHTML = '<span></span><span></span><span></span>'; messages.appendChild(t); messages.scrollTop = messages.scrollHeight; return t; }
+  async function sendMessage() {
+    const text = input.value.trim(); if (!text) return;
+    input.value = ''; input.style.height = 'auto'; send.disabled = true; appendUser(text);
+    const typing = showTyping(); let botDiv = null, rawText = '';
+    try {
+      const res = await fetch(WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json','x-jotform-secret':SECRET},body:JSON.stringify({message:text,sessionId})});
+      const reader = res.body.getReader(); const decoder = new TextDecoder(); let buffer = '';
+      while (true) {
+        const {done,value} = await reader.read(); if (done) break;
+        buffer += decoder.decode(value,{stream:true});
+        const lines = buffer.split('\\n'); buffer = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          let ev; try { ev = JSON.parse(line.slice(6)); } catch { continue; }
+          if (ev.type==='token') {
+            if (!botDiv) { typing.remove(); addTimestamp(); botDiv=document.createElement('div'); botDiv.className='jw-msg bot'; messages.appendChild(botDiv); if(!isOpen){unreadCount++;badge.textContent=unreadCount;badge.style.display='flex';toggle.classList.add('pulse');} }
+            rawText+=ev.text; botDiv.textContent=rawText; messages.scrollTop=messages.scrollHeight;
+          } else if (ev.type==='done') {
+            if (botDiv) { botDiv.innerHTML=renderMarkdown(rawText); setTimeout(()=>botDiv.scrollIntoView({behavior:'smooth',block:'start'}),50); }
+            if (ev.cards) renderCards(ev.cards);
+            if (ev.sessionId) { sessionId=ev.sessionId; localStorage.setItem('jw_session',sessionId); }
+          } else if (ev.type==='suggestions') {
+            appendSuggestionChips(ev.items);
+          } else if (ev.type==='error') {
+            if (typing.parentNode) typing.remove(); appendBot(ev.message||'Something went wrong — please try again.');
+          }
+        }
+      }
+    } catch { if (typing.parentNode) typing.remove(); appendBot('Connection issue — please try again in a moment.'); }
+    send.disabled = false; input.focus();
+  }
+  send.addEventListener('click', sendMessage);
+  input.addEventListener('keydown', e => { if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); sendMessage(); } });
+  input.addEventListener('input', () => { input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,100)+'px'; });
+})();
+<\/script>`;
+
+document.getElementById('widget-code').value = WIDGET_CODE;
+
+function copyCode() {
+  const ta = document.getElementById('widget-code');
+  const btn = document.getElementById('copy-btn');
+  navigator.clipboard.writeText(ta.value).then(() => {
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy Code'; btn.classList.remove('copied'); }, 2500);
+  }).catch(() => {
+    ta.select();
+    document.execCommand('copy');
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy Code'; btn.classList.remove('copied'); }, 2500);
+  });
+}
+</script>
+</body>
+</html>
