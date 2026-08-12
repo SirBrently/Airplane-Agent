@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
+    "check": "node --check server.js && node --check lead-engine.js && node --check test.js",
+    "test:ci": "node scripts/ci-smoke.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
