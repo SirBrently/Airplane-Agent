@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const https = require('https');
 const Anthropic = require('@anthropic-ai/sdk');
+const { runLeadSearch, renderReportHTML, renderReportText } = require('./lead-engine');
 
 const app = express();
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -656,6 +657,85 @@ app.post('/webhook', async (req, res) => {
     session.history.pop();
     console.error('[webhook] Claude API error:', err.message);
     res.status(500).json({ error: 'Failed to generate response', details: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Leaseback Inquiry Funnel — Phase 1 §2/§3 lead intake + operator search.
+// A Jotform submission (or any JSON caller / Make.com) hits POST /lead; we
+// return a ranked local operator report. Add ?format=html to get the branded
+// report directly (handy for previewing or piping into an email step).
+// ---------------------------------------------------------------------------
+
+// Jotform posts messy field names and often wraps everything in rawRequest.
+// Flatten all of it, then pull the fields we need by fuzzy key match. Clean
+// callers can also just POST { firstName, zip, email, goal, source }.
+function parseLeadBody(body) {
+  const flat = {};
+  const absorb = (obj) => {
+    for (const [k, v] of Object.entries(obj || {})) {
+      if (v && typeof v === 'object' && !Array.isArray(v)) {
+        // Jotform name field: { first: 'Jane', last: 'Doe' }
+        if ('first' in v || 'last' in v) flat._name = [v.first, v.last].filter(Boolean).join(' ');
+        absorb(v);
+      } else if (v != null && v !== '') {
+        flat[k] = v;
+      }
+    }
+  };
+  absorb(body);
+  if (typeof body?.rawRequest === 'string') {
+    try { absorb(JSON.parse(body.rawRequest)); } catch { /* not JSON */ }
+  }
+
+  const find = (re) => {
+    for (const [k, v] of Object.entries(flat)) {
+      if (re.test(k) && typeof v !== 'object') return String(v).trim();
+    }
+    return null;
+  };
+  const zipRaw = body.zip || find(/zip|postal/i) || '';
+  const zip = String(zipRaw).match(/\d{5}/)?.[0] || null; // normalize to 5-digit US ZIP
+
+  return {
+    firstName: body.firstName || find(/first[_ ]?name|^first$/i) || flat._name?.split(' ')[0] || null,
+    zip,
+    email: body.email || find(/e[-_ ]?mail/i) || null,
+    goal: body.goal || find(/goal|primary|interest|looking/i) || null,
+    source: body.source || find(/source|campaign|utm/i) || null,
+  };
+}
+
+app.post('/lead', async (req, res) => {
+  if (req.headers['x-jotform-secret'] !== process.env.JOTFORM_SECRET) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  if (!process.env.GOOGLE_PLACES_API_KEY) {
+    return res.status(500).json({ error: 'GOOGLE_PLACES_API_KEY is not configured' });
+  }
+
+  const lead = parseLeadBody(req.body);
+  if (!lead.zip) {
+    return res.status(400).json({ error: 'A valid 5-digit US ZIP code is required' });
+  }
+  console.log(`[lead] zip=${lead.zip} email=${lead.email || 'none'} goal="${(lead.goal || '').slice(0, 40)}"`);
+
+  try {
+    const result = await runLeadSearch(lead, process.env.GOOGLE_PLACES_API_KEY);
+    console.log(`[lead] radius=${result.searchRadiusMiles}mi operators=${result.operatorsFound} reported=${result.operators.length}`);
+
+    if (req.query.format === 'html') {
+      res.set('Content-Type', 'text/html; charset=utf-8');
+      return res.send(renderReportHTML(result));
+    }
+    res.json({
+      ...result,
+      reportHtml: renderReportHTML(result),
+      reportText: renderReportText(result),
+    });
+  } catch (err) {
+    console.error('[lead] error:', err.message);
+    res.status(502).json({ error: 'Operator search failed', details: err.message });
   }
 });
 

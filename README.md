@@ -50,8 +50,34 @@ package.json
 | `GET /preview` | Full preview page with live widget |
 | `POST /stream` | Streaming AI endpoint (SSE) — accepts `{ message, sessionId }` |
 | `POST /webhook` | Non-streaming fallback (Jotform compatible) |
+| `POST /lead` | **Leaseback Inquiry Funnel (Phase 1)** — lead intake + local operator search & report |
 | `GET /health` | Health check |
 | `GET /img?url=...` | Image proxy for CDN hotlink bypass |
+
+---
+
+## Leaseback Inquiry Funnel — `POST /lead`
+
+Turns a Jotform leaseback submission into a ranked local operator report (`lead-engine.js`).
+
+**Input** — send `x-jotform-secret` header. Accepts a raw Jotform body (with `rawRequest`) or clean JSON:
+
+```json
+{ "firstName": "Jane", "zip": "80112", "email": "jane@example.com", "goal": "leaseback + training", "source": "fb-campaign" }
+```
+
+**What it does** (spec §2/§3):
+1. Geocodes the ZIP → lat/long.
+2. Finds public-use airports within the radius.
+3. Searches nearby operators via Google Places — flight schools, aircraft rental, flying clubs, FBOs, aircraft management.
+4. Enriches (website/phone), filters out maintenance-/fuel-/helicopter-only and off-target businesses.
+5. Ranks each **Strong Potential Fit / Possible Fit / Secondary Prospect** with a reason.
+6. Radius auto-expands **50 → 75 → 100 mi** until at least 5 viable operators are found.
+7. Returns JSON (`operators[]`, `reportHtml`, `reportText`) — add `?format=html` to get the branded report directly.
+
+**Credibility rule:** operators are labelled *potential* fits only; every report discloses that current demand has **not** been verified by Jets West.
+
+> Airport identifiers are best-effort from Places today; `findAirports()` in `lead-engine.js` is isolated so an authoritative FAA/NASR dataset can be dropped in later.
 
 ---
 
@@ -78,6 +104,7 @@ Copy everything between `<!-- START WIDGET -->` and `<!-- END WIDGET -->` in `so
 ```
 ANTHROPIC_API_KEY=your_key_here
 JOTFORM_SECRET=jetswest_webhook_2024
+GOOGLE_PLACES_API_KEY=your_google_places_key   # required for POST /lead
 PORT=3000
 ```
 
