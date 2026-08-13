@@ -3,6 +3,11 @@ const express = require('express');
 const cors = require('cors');
 const https = require('https');
 const Anthropic = require('@anthropic-ai/sdk');
+const { runLeadSearch, renderReportHTML, renderReportText } = require('./lead-engine');
+const email = require('./email');
+const airtable = require('./airtable');
+const templates = require('./templates');
+const { INVENTORY, findMatchingAircraft } = require('./inventory');
 
 const app = express();
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -34,26 +39,6 @@ function pruneSessions() {
   }
 }
 setInterval(pruneSessions, 15 * 60 * 1000);
-
-const INVENTORY = [
-  { name: 'Challenger 3500', year: '2025', price: '$29M', category: 'Large Cabin Jet', keywords: ['challenger 3500', 'challenger'], specs: ['170.1 hrs TT', '136 Landings', 'Ultra-Long-Range', 'New Delivery'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Bombardier_BD-100-1A10_Challenger_300_AN1704544.jpg/330px-Bombardier_BD-100-1A10_Challenger_300_AN1704544.jpg' },
-  { name: 'Falcon 900LX', year: '2012', price: '$19M', category: 'Large Cabin Trijet', keywords: ['falcon 900', 'falcon 900lx', 'falcon'], specs: ['14 Passengers', 'MSP Gold Engines', 'Large Cabin', 'Trijet'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Spanish_Air_Force_Dassault_Falcon_900B.jpg/330px-Spanish_Air_Force_Dassault_Falcon_900B.jpg' },
-  { name: 'Learjet 60XR', year: '2008', price: '$1.9M', category: 'Midsize Jet', keywords: ['learjet 60', 'learjet 60xr', 'learjet'], specs: ['3,460 TT', '6 Passengers', 'Mach 0.81', 'Midsize Jet'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Bombardier.learjet60.oe-gtf.arp.jpg/330px-Bombardier.learjet60.oe-gtf.arp.jpg' },
-  { name: 'Beechjet 400', year: '1988', price: '$875K', category: 'Light Jet', keywords: ['beechjet 400', 'beechjet'], specs: ['4,890 TT', 'Garmin Avionics', '7 Passengers', 'Light Jet'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/T-1A_Jayhawk.jpg/330px-T-1A_Jayhawk.jpg' },
-  { name: 'Citation II', year: '1982', price: '$695K', category: 'Light Jet', keywords: ['citation ii', 'citation 2'], specs: ['10 Seats', 'Low-Time Engines', '10% Down Financing', 'Light Jet'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Cessna_550b_citation_bravo_cs-dhr_arp.jpg/330px-Cessna_550b_citation_bravo_cs-dhr_arp.jpg' },
-  { name: 'Citation 501SP',year: '1977', price: '$685K / $4,950/mo', category: 'Entry Jet', keywords: ['citation 501', '501sp'], specs: ['6,847 TT', 'Garmin Glass Panel', 'Financing Available', 'Entry Jet'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/CN_Air_Cessna_501_Citation_I_SP.jpg/330px-CN_Air_Cessna_501_Citation_I_SP.jpg' },
-  { name: 'Citation I/SP', year: '1977', price: '$885K', category: 'Entry Jet', keywords: ['citation i/sp', 'citation i'], specs: ['6,242 TT', 'Low-Time Engines', 'Entry Jet', 'Classic'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/CN_Air_Cessna_501_Citation_I_SP.jpg/330px-CN_Air_Cessna_501_Citation_I_SP.jpg' },
-  { name: 'Piper Meridian', year: '1988', price: '$995K', category: 'Turboprop', keywords: ['meridian', 'piper meridian'], specs: ['2,761 TT', 'Financing Available', 'Single-Engine Turboprop', '5 Passengers'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Piper_PA-46-500TP_Malibu_Meridian_AN1805813.jpg/330px-Piper_PA-46-500TP_Malibu_Meridian_AN1805813.jpg' },
-  { name: 'Seneca II', year: '1980', price: '$199,600', category: 'Twin Piston', keywords: ['seneca ii', 'seneca'], specs: ['4,474 TT', 'FIKI Certified', 'Twin Piston', '6 Passengers'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Piper_PA-34_Naples_run_%28cropped%29.jpg/330px-Piper_PA-34_Naples_run_%28cropped%29.jpg' },
-  { name: 'Cessna 182 Skylane', year: '1979', price: '$189,500', category: 'Single Piston', keywords: ['skylane', 'cessna 182', '182 skylane'], specs: ['3,709 TT', 'Avidyne/Garmin', '4 Passengers', 'Single Piston'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Cessna182t_skylane_n2231f_cotswoldairshow_2010_arp.jpg/330px-Cessna182t_skylane_n2231f_cotswoldairshow_2010_arp.jpg' },
-  { name: 'Beechcraft S35 Bonanza', year: '1965', price: '$99,500', category: 'Classic Piston', keywords: ['bonanza', 's35 bonanza', 'beechcraft s35'], specs: ['6,952 TT', 'V-Tail Classic', 'Single Piston', '4 Passengers'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Beech_Bonanza_Takeoff_%285517383917%29.jpg/330px-Beech_Bonanza_Takeoff_%285517383917%29.jpg' },
-  { name: 'Robinson R-44', year: '2002', price: '$198,000', category: 'Helicopter', keywords: ['robinson r-44', 'r-44', 'r44', 'robinson'], specs: ['1,885 hrs', '1,000 Blade Hrs Remaining', 'Helicopter', '3 Passengers'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Robinson_R44_II_%28cropped%29.jpg/330px-Robinson_R44_II_%28cropped%29.jpg' },
-];
-
-function findMatchingAircraft(text) {
-  const lower = text.toLowerCase();
-  return INVENTORY.filter(a => a.keywords.some(kw => lower.includes(kw))).slice(0, 3);
-}
 
 const SYSTEM_PROMPT = `You are the voice of JetsWest Aviation — a premier aviation brokerage with over 50 years of experience buying and selling private aircraft. You speak on behalf of Stan Snyder and the JetsWest team.
 
@@ -145,6 +130,16 @@ async function generateSuggestions(reply) {
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'jetswest-relay' });
+});
+
+// Preview the follow-up email templates in a browser: /email-preview?type=day1|planning
+app.get('/email-preview', (req, res) => {
+  const type = (req.query.type || 'day1').toLowerCase();
+  const sample =
+    type === 'planning'
+      ? templates.renderPlanningPackage({ firstName: 'Jane', planningPackageUrl: 'https://gojetswest.com/leaseback' })
+      : templates.renderDay1({ firstName: 'Jane', operatorCount: 7, location: 'Centennial, CO' });
+  res.set('Content-Type', 'text/html; charset=utf-8').send(sample.html);
 });
 
 app.get('/preview', (req, res) => {
@@ -656,6 +651,121 @@ app.post('/webhook', async (req, res) => {
     session.history.pop();
     console.error('[webhook] Claude API error:', err.message);
     res.status(500).json({ error: 'Failed to generate response', details: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Leaseback Inquiry Funnel — Phase 1 §2/§3 lead intake + operator search.
+// A Jotform submission (or any JSON caller / Make.com) hits POST /lead; we
+// return a ranked local operator report. Add ?format=html to get the branded
+// report directly (handy for previewing or piping into an email step).
+// ---------------------------------------------------------------------------
+
+// Jotform posts messy field names and often wraps everything in rawRequest.
+// Flatten all of it, then pull the fields we need by fuzzy key match. Clean
+// callers can also just POST { firstName, zip, email, goal, source }.
+function parseLeadBody(body) {
+  const flat = {};
+  const absorb = (obj) => {
+    for (const [k, v] of Object.entries(obj || {})) {
+      if (v && typeof v === 'object' && !Array.isArray(v)) {
+        // Jotform name field: { first: 'Jane', last: 'Doe' }
+        if ('first' in v || 'last' in v) flat._name = [v.first, v.last].filter(Boolean).join(' ');
+        absorb(v);
+      } else if (v != null && v !== '') {
+        flat[k] = v;
+      }
+    }
+  };
+  absorb(body);
+  if (typeof body?.rawRequest === 'string') {
+    try { absorb(JSON.parse(body.rawRequest)); } catch { /* not JSON */ }
+  }
+
+  const find = (re) => {
+    for (const [k, v] of Object.entries(flat)) {
+      if (re.test(k) && typeof v !== 'object') return String(v).trim();
+    }
+    return null;
+  };
+  const zipRaw = body.zip || find(/zip|postal/i) || '';
+  const zip = String(zipRaw).match(/\d{5}/)?.[0] || null; // normalize to 5-digit US ZIP
+
+  return {
+    firstName: body.firstName || find(/first[_ ]?name|^first$/i) || flat._name?.split(' ')[0] || null,
+    zip,
+    email: body.email || find(/e[-_ ]?mail/i) || null,
+    goal: body.goal || find(/goal|primary|interest|looking/i) || null,
+    source: body.source || find(/source|campaign|utm/i) || null,
+  };
+}
+
+app.post('/lead', async (req, res) => {
+  // Accept the secret via header (Make/Zapier/curl) OR ?secret= query param, so
+  // Jotform's native webhook — which can't set custom headers — can post here
+  // directly with no middleware.
+  const providedSecret = req.headers['x-jotform-secret'] || req.query.secret;
+  if (providedSecret !== process.env.JOTFORM_SECRET) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  if (!process.env.GOOGLE_PLACES_API_KEY) {
+    return res.status(500).json({ error: 'GOOGLE_PLACES_API_KEY is not configured' });
+  }
+
+  const lead = parseLeadBody(req.body);
+  if (!lead.zip) {
+    return res.status(400).json({ error: 'A valid 5-digit US ZIP code is required' });
+  }
+  console.log(`[lead] zip=${lead.zip} email=${lead.email || 'none'} goal="${(lead.goal || '').slice(0, 40)}"`);
+
+  try {
+    const result = await runLeadSearch(lead, process.env.GOOGLE_PLACES_API_KEY);
+    console.log(`[lead] radius=${result.searchRadiusMiles}mi operators=${result.operatorsFound} reported=${result.operators.length}`);
+
+    const reportHtml = renderReportHTML(result);
+
+    // Best-effort glue (spec §3 email + §6 storage). Never fails the request:
+    // each step runs only if its keys are set, and errors are captured, not thrown.
+    // Add ?dry=1 to compute the report without emailing or writing to Airtable.
+    const delivery = { dryRun: req.query.dry === '1', emailed: false, email: null, airtable: null };
+    if (!delivery.dryRun) {
+      if (email.isConfigured() && result.prospect.email) {
+        try {
+          delivery.email = await email.sendReport({
+            to: result.prospect.email,
+            subject: 'Your local leaseback opportunity report — Jets West',
+            html: reportHtml,
+          });
+          delivery.emailed = true;
+        } catch (e) {
+          delivery.email = { error: e.message };
+          console.error('[lead] email error:', e.message);
+        }
+      }
+      if (airtable.isConfigured()) {
+        try {
+          delivery.airtable = await airtable.saveLeadRun(result, { emailed: delivery.emailed });
+        } catch (e) {
+          delivery.airtable = { error: e.message };
+          console.error('[lead] airtable error:', e.message);
+        }
+      }
+    }
+    console.log(`[lead] emailed=${delivery.emailed} airtable=${delivery.airtable ? (delivery.airtable.leadId ? 'saved' : 'partial') : 'off'}`);
+
+    if (req.query.format === 'html') {
+      res.set('Content-Type', 'text/html; charset=utf-8');
+      return res.send(reportHtml);
+    }
+    res.json({
+      ...result,
+      delivery,
+      reportHtml,
+      reportText: renderReportText(result),
+    });
+  } catch (err) {
+    console.error('[lead] error:', err.message);
+    res.status(502).json({ error: 'Operator search failed', details: err.message });
   }
 });
 

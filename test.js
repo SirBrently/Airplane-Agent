@@ -11,12 +11,17 @@ const TEST_MESSAGES = [
 ];
 
 function post(message) {
+  return postJSON('/webhook', { message });
+}
+
+// Generic authenticated JSON POST helper.
+function postJSON(path, payload) {
   return new Promise((resolve, reject) => {
-    const body = JSON.stringify({ message });
+    const body = JSON.stringify(payload);
     const options = {
       hostname: 'localhost',
       port: PORT,
-      path: '/webhook',
+      path,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -68,6 +73,33 @@ async function runTests() {
     console.log('Reply:', result.body.reply || result.body);
   } catch (err) {
     console.error('Request failed:', err.message);
+  }
+
+  // Test the leaseback lead intake (Phase 1). Sends a Jotform-style body to
+  // exercise parsing + the operator search. Needs GOOGLE_PLACES_API_KEY set on
+  // the server; without it the route returns a clear 500 config error.
+  console.log('\n--- Lead Intake Test (POST /lead) ---');
+  try {
+    const lead = await postJSON('/lead', {
+      rawRequest: JSON.stringify({
+        q3_name: { first: 'Jane', last: 'Doe' },
+        q4_zip: '80112',
+        q5_email: 'jane@example.com',
+        q6_primaryGoal: 'Explore a leaseback while I finish flight training',
+        source: 'facebook-leaseback-campaign',
+      }),
+    });
+    console.log('Status:', lead.status);
+    if (lead.body && lead.body.operators) {
+      console.log(`Radius: ${lead.body.searchRadiusMiles}mi | operators: ${lead.body.operators.length}`);
+      lead.body.operators.slice(0, 5).forEach((op, i) =>
+        console.log(`  ${i + 1}. ${op.name} [${op.fitRating}] — ${op.distanceMiles}mi`)
+      );
+    } else {
+      console.log('Body:', lead.body);
+    }
+  } catch (err) {
+    console.error('Lead test failed:', err.message);
   }
 
   // Test auth rejection

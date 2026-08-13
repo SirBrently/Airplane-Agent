@@ -1,0 +1,379 @@
+<title>Leaseback Funnel Backbone</title>
+<style>
+  :root {
+    --bg: #eef2f7;
+    --surface: #ffffff;
+    --surface-2: #f5f8fb;
+    --ink: #14202e;
+    --ink-2: #4a5b70;
+    --ink-3: #6b7c92;
+    --line: #d5dee8;
+    --brand: #0d2340;
+    --brand-ink: #eaf0f8;
+    --accent: #9a6f1f;
+    --accent-strong: #b8862f;
+    --good: #1f7a52;
+    --good-bg: #e4f1ea;
+    --warn: #8a6410;
+    --warn-bg: #f6eed8;
+    --defer: #5b6b7e;
+    --defer-bg: #e8edf3;
+    --shadow: 0 1px 2px rgba(13,35,64,.06), 0 6px 24px rgba(13,35,64,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0a1420;
+      --surface: #0f1e2e;
+      --surface-2: #14273a;
+      --ink: #dce7f3;
+      --ink-2: #9cb0c7;
+      --ink-3: #7387a0;
+      --line: #21384f;
+      --brand: #0c1d33;
+      --brand-ink: #e7eefa;
+      --accent: #d4af37;
+      --accent-strong: #e5c25c;
+      --good: #43b47e;
+      --good-bg: #122e24;
+      --warn: #d6a53e;
+      --warn-bg: #302713;
+      --defer: #8598ad;
+      --defer-bg: #17293a;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0a1420;
+    --surface: #0f1e2e;
+    --surface-2: #14273a;
+    --ink: #dce7f3;
+    --ink-2: #9cb0c7;
+    --ink-3: #7387a0;
+    --line: #21384f;
+    --brand: #0c1d33;
+    --brand-ink: #e7eefa;
+    --accent: #d4af37;
+    --accent-strong: #e5c25c;
+    --good: #43b47e;
+    --good-bg: #122e24;
+    --warn: #d6a53e;
+    --warn-bg: #302713;
+    --defer: #8598ad;
+    --defer-bg: #17293a;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 30px rgba(0,0,0,.35);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    font-size: 17px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 20px 80px; }
+
+  /* ---- Header ---- */
+  .masthead {
+    background: var(--brand);
+    color: var(--brand-ink);
+    border-radius: 0 0 16px 16px;
+    padding: 40px 34px 30px;
+    position: relative;
+    overflow: hidden;
+  }
+  .masthead::after {
+    content: ""; position: absolute; left: 34px; right: 34px; bottom: 22px;
+    height: 2px; background: linear-gradient(90deg, var(--accent-strong), transparent 65%);
+  }
+  .eyebrow {
+    font-size: 12px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--accent-strong); font-weight: 700;
+  }
+  .masthead h1 {
+    font-size: clamp(30px, 5.4vw, 46px); line-height: 1.05; font-weight: 800;
+    letter-spacing: -.02em; text-wrap: balance; margin: 14px 0 4px;
+  }
+  .masthead .sub { color: #b9c9dd; font-size: 17px; max-width: 60ch; margin-top: 10px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+  .meta .chip {
+    font-size: 12.5px; font-weight: 600; letter-spacing: .02em;
+    padding: 5px 11px; border-radius: 999px;
+    background: rgba(255,255,255,.08); color: #cfdbea;
+    border: 1px solid rgba(255,255,255,.12);
+  }
+  .meta .chip.status { background: var(--accent-strong); color: #1b1403; border-color: transparent; }
+
+  /* ---- Sections ---- */
+  section { margin-top: 40px; }
+  .sec-label {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12.5px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700; margin-bottom: 16px;
+  }
+  .sec-label::before { content: ""; width: 22px; height: 2px; background: var(--accent); display: inline-block; }
+  h2 { font-size: 24px; letter-spacing: -.01em; font-weight: 750; text-wrap: balance; margin-bottom: 8px; }
+  p { color: var(--ink-2); max-width: 68ch; }
+  p + p { margin-top: 12px; }
+  strong { color: var(--ink); font-weight: 680; }
+
+  /* ---- Decisions grid ---- */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px 18px 16px; box-shadow: var(--shadow);
+  }
+  .card .k { font-size: 12.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); font-weight: 700; }
+  .card .v { font-size: 17px; font-weight: 650; color: var(--ink); margin: 8px 0 12px; line-height: 1.35; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700;
+    padding: 4px 10px; border-radius: 999px; letter-spacing: .02em;
+  }
+  .pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .pill.decided { color: var(--good); background: var(--good-bg); }
+  .pill.assume { color: var(--warn); background: var(--warn-bg); }
+  .pill.defer { color: var(--defer); background: var(--defer-bg); }
+
+  /* ---- Council voices ---- */
+  .voices { display: grid; gap: 14px; }
+  .voice {
+    background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    border-radius: 10px; padding: 18px 20px; box-shadow: var(--shadow);
+  }
+  .voice .role {
+    display: flex; align-items: center; gap: 9px;
+    font-size: 13px; font-weight: 750; letter-spacing: .01em; color: var(--ink); margin-bottom: 8px;
+  }
+  .voice .role .dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .voice blockquote {
+    font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    font-style: italic; font-size: 16.5px; line-height: 1.62; color: var(--ink-2);
+  }
+  .voice blockquote b { font-style: normal; color: var(--ink); font-weight: 700; }
+
+  /* ---- Converged list ---- */
+  .agree { display: grid; gap: 10px; margin-top: 4px; }
+  .agree li { list-style: none; display: flex; gap: 12px; align-items: flex-start;
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 13px 16px; }
+  .agree .num {
+    flex: none; width: 24px; height: 24px; border-radius: 6px; background: var(--brand); color: var(--brand-ink);
+    font-size: 13px; font-weight: 800; display: grid; place-items: center; margin-top: 1px;
+  }
+  .agree .txt { color: var(--ink-2); font-size: 15.5px; }
+  .agree .txt b { color: var(--ink); }
+
+  /* ---- Flow ---- */
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; margin-top: 6px; }
+  .node {
+    flex: 1 1 150px; background: var(--surface); border: 1px solid var(--line); border-radius: 11px;
+    padding: 14px 15px; box-shadow: var(--shadow); position: relative;
+  }
+  .node .tag { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; font-weight: 700; color: var(--accent); }
+  .node .name { font-weight: 700; font-size: 15.5px; margin: 5px 0 3px; color: var(--ink); }
+  .node .desc { font-size: 13px; color: var(--ink-3); line-height: 1.45; }
+  .node.brainy { border-color: var(--accent); border-width: 1.5px; }
+  .arrow { align-self: center; color: var(--ink-3); font-weight: 700; font-size: 20px; }
+  .flow-note {
+    margin-top: 12px; font-size: 14px; color: var(--ink-2);
+    background: var(--surface-2); border: 1px dashed var(--line); border-radius: 10px; padding: 12px 15px;
+  }
+  .flow-note b { color: var(--ink); }
+
+  /* ---- Table ---- */
+  .tbl-scroll { overflow-x: auto; margin-top: 4px; border-radius: 12px; border: 1px solid var(--line); box-shadow: var(--shadow); }
+  table { border-collapse: collapse; width: 100%; background: var(--surface); font-size: 15px; min-width: 460px; }
+  caption { caption-side: bottom; text-align: left; font-size: 12.5px; color: var(--ink-3); padding: 10px 4px 0; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  thead th { background: var(--surface-2); font-size: 12.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); font-weight: 700; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  tr.highlight td { background: var(--warn-bg); }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .92em; background: var(--surface-2); padding: 1px 6px; border-radius: 5px; border: 1px solid var(--line); }
+
+  /* ---- Roadmap ---- */
+  .road { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+  .lane { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; box-shadow: var(--shadow); }
+  .lane h3 { font-size: 14px; letter-spacing: .04em; text-transform: uppercase; color: var(--ink); display: flex; align-items: center; gap: 9px; }
+  .lane h3 .tick { width: 9px; height: 9px; border-radius: 50%; }
+  .lane ul { margin-top: 12px; display: grid; gap: 9px; }
+  .lane li { list-style: none; font-size: 14.5px; color: var(--ink-2); padding-left: 18px; position: relative; line-height: 1.45; }
+  .lane li::before { content: "→"; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+
+  .footer { margin-top: 46px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 13.5px; color: var(--ink-3); }
+  .footer b { color: var(--ink-2); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal { animation: rise .5s cubic-bezier(.2,.7,.3,1) both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  }
+</style>
+
+<header class="masthead reveal">
+  <div class="eyebrow">Architecture Decision Record · Phase 1</div>
+  <h1>The Leaseback Funnel Backbone</h1>
+  <div class="sub">How a Jotform leaseback lead becomes a ranked local operator report — and which system does which job, decided before we build further.</div>
+  <div class="meta">
+    <span class="chip">Aug 12, 2026</span>
+    <span class="chip">Jets West · Sophie relay</span>
+    <span class="chip">Design volume: 100–800 leads/mo</span>
+    <span class="chip status">Status: Decided</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section class="reveal">
+    <div class="sec-label">Context</div>
+    <h2>What we're locking in</h2>
+    <p>The <span class="mono">POST /lead</span> endpoint already does the hard part on the existing Node server: geocode the ZIP, search Google Places for aviation operators, filter, rank, and return an email-ready branded report. The open question was everything <em>around</em> it — where lead and operator data live, how follow-ups fire, and how much belongs in Make.com versus code. A five-lens review converged on a clear answer. This record is that answer.</p>
+  </section>
+
+  <section class="reveal">
+    <div class="sec-label">Decisions at a glance</div>
+    <div class="grid">
+      <div class="card">
+        <div class="k">System of record</div>
+        <div class="v">Airtable — one writer, staff-visible</div>
+        <span class="pill decided">Decided</span>
+      </div>
+      <div class="card">
+        <div class="k">Operator storage</div>
+        <div class="v">Ship Make upsert now; endpoint cache next</div>
+        <span class="pill decided">Decided · phased</span>
+      </div>
+      <div class="card">
+        <div class="k">Make.com's role</div>
+        <div class="v">Thin glue only — no ranking logic</div>
+        <span class="pill decided">Decided</span>
+      </div>
+      <div class="card">
+        <div class="k">Report delivery</div>
+        <div class="v">Synchronous for now, revisit on latency</div>
+        <span class="pill assume">Assumption</span>
+      </div>
+      <div class="card">
+        <div class="k">Follow-up engine</div>
+        <div class="v">One scheduled scan of due dates</div>
+        <span class="pill decided">Decided</span>
+      </div>
+      <div class="card">
+        <div class="k">Async redesign</div>
+        <div class="v">Deferred until volume climbs past ~800/mo</div>
+        <span class="pill defer">Deferred</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="sec-label">The council</div>
+    <h2>Five lenses on the direction</h2>
+    <p>Each perspective was asked the same thing: is this the most efficient way forward, and where does it break?</p>
+    <div class="voices" style="margin-top:18px">
+      <div class="voice">
+        <div class="role"><span class="dot" style="background:#3b82f6"></span>Pragmatic Engineer</div>
+        <blockquote>The Node server already does the hard part. The real risk now is <b>duplicating logic across Make and code</b> — anything we push into Make.com is invisible to git, untestable, and fails silently. Keep Make as thin glue, not a second brain.</blockquote>
+      </div>
+      <div class="voice">
+        <div class="role"><span class="dot" style="background:#c69a3f"></span>Cost / Efficiency Hawk</div>
+        <blockquote>Nobody counted the Google bill. Each lead fires <b>~20 Places calls</b>. At medium volume that's real money, and the <b>endpoint-side cache is the single biggest lever</b> — it cuts cost and latency at once. The cache isn't "later," it's the efficiency play.</blockquote>
+      </div>
+      <div class="voice">
+        <div class="role"><span class="dot" style="background:#1f7a52"></span>Product / Sales</div>
+        <blockquote>The human call steps are the whole point. Staff need a <b>visible, editable</b> list of leads and status — that's why Airtable earns its place over a pure-code database. Automate the reminders, not the relationship. And "potential fit" in every template, never "interested."</blockquote>
+      </div>
+      <div class="voice">
+        <div class="role"><span class="dot" style="background:#ef6b52"></span>Reliability / Ops</div>
+        <blockquote>Six services sit in the critical path, synchronously. If Places is slow, the Jotform-facing call hangs. The 5–10 minute SLA is generous, so <b>eventually make the report async</b> — ack instantly, search in the background. One retry path, not six.</blockquote>
+      </div>
+      <div class="voice">
+        <div class="role"><span class="dot" style="background:#8b5cf6"></span>Data Architect</div>
+        <blockquote>Place ID as the dedupe key is right. But decide <b>now</b> whether Airtable is the system of record or just a view — two writers to one table means drift. Let Make link operators by Place-ID upsert; don't hand-roll the join.</blockquote>
+      </div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="sec-label">Converged</div>
+    <h2>What all five agreed on</h2>
+    <ul class="agree">
+      <li><span class="num">1</span><span class="txt"><b>The Node server is the brain; Make.com is thin glue.</b> Search, ranking, and report generation stay in code. Make only triggers, moves data, and sends mail.</span></li>
+      <li><span class="num">2</span><span class="txt"><b>Airtable stays — as the single system of record.</b> Its staff-visibility is a feature for the human call steps, and one writer (Make) keeps it clean.</span></li>
+      <li><span class="num">3</span><span class="txt"><b>Follow-ups are one scheduled scan</b> over <span class="mono">Next Action Date ≤ today</span> — not a web of per-lead timers.</span></li>
+      <li><span class="num">4</span><span class="txt"><b>The credibility rule lives in the templates.</b> Every message says "potential fit"; demand is never implied as confirmed.</span></li>
+    </ul>
+  </section>
+
+  <section class="reveal">
+    <div class="sec-label">Chosen architecture</div>
+    <h2>Who does what</h2>
+    <div class="flow">
+      <div class="node"><div class="tag">Trigger</div><div class="name">Jotform</div><div class="desc">Lead submits first name, ZIP, email, goal.</div></div>
+      <div class="arrow">→</div>
+      <div class="node brainy"><div class="tag">The brain</div><div class="name">POST /lead · Node</div><div class="desc">Geocode → airports → Places search → filter → rank → branded report.</div></div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="tag">Glue</div><div class="name">Make.com</div><div class="desc">Writes Airtable, sends the report email, stamps follow-up dates.</div></div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="tag">Record + view</div><div class="name">Airtable</div><div class="desc">Leads + Operators master. What staff see and act on.</div></div>
+    </div>
+    <div class="flow-note"><b>Follow-up loop:</b> a separate scheduled Make scenario scans Airtable for leads whose <span class="mono">Next Action Date</span> is due, sends the Day-1 email or creates the human-call task, and advances <span class="mono">Status</span>. The same server response feeds the operator upsert — so the master DB fills itself instead of being researched from scratch.</div>
+  </section>
+
+  <section class="reveal">
+    <div class="sec-label">Efficiency</div>
+    <h2>Google Places cost model</h2>
+    <p>Sized for the decided volume of 100–800 leads/mo. Each lead currently costs roughly <strong>$0.30–0.50</strong> in Places calls (≈7 text searches + up to 14 detail lookups + geocode). The endpoint cache reuses operators across nearby leads, avoiding an estimated 40–60% of calls at steady state.</p>
+    <div class="tbl-scroll">
+      <table>
+        <caption>List-price estimates before any Google free-tier credit; actual SKUs and rates vary. Cache figures assume ~50% call reuse.</caption>
+        <thead>
+          <tr><th>Leads / month</th><th class="num">Calls / mo</th><th class="num">No cache</th><th class="num">With cache (Option B)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>100 (low end)</td><td class="num">~2,100</td><td class="num">$30–50</td><td class="num">$15–25</td></tr>
+          <tr class="highlight"><td>400 (midpoint)</td><td class="num">~8,400</td><td class="num">$120–200</td><td class="num">$60–100</td></tr>
+          <tr><td>800 (high end)</td><td class="num">~16,800</td><td class="num">$240–400</td><td class="num">$120–200</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:14px">The takeaway that set the roadmap: at 400/mo the cache roughly <strong>halves the bill and cuts latency</strong> — enough to build it soon, not enough to block launch on it.</p>
+  </section>
+
+  <section class="reveal">
+    <div class="sec-label">Roadmap</div>
+    <h2>Now, next, later</h2>
+    <div class="road">
+      <div class="lane">
+        <h3><span class="tick" style="background:var(--good)"></span>Now — launch</h3>
+        <ul>
+          <li>Set <span class="mono">GOOGLE_PLACES_API_KEY</span> on Railway, merge PR #1</li>
+          <li>Import the three Airtable tables</li>
+          <li>Make scenario: Jotform → /lead → email → Airtable upsert</li>
+          <li>Day-1 + Planning Package email templates (credibility-safe)</li>
+        </ul>
+      </div>
+      <div class="lane">
+        <h3><span class="tick" style="background:var(--warn)"></span>Next — efficiency</h3>
+        <ul>
+          <li>Option B: endpoint-side operator cache + Airtable read/upsert</li>
+          <li>Scheduled follow-up scan (Day-1 / Day 2–3 tasks)</li>
+          <li>Observed-fleet enrichment from operator websites</li>
+        </ul>
+      </div>
+      <div class="lane">
+        <h3><span class="tick" style="background:var(--defer)"></span>Later — scale</h3>
+        <ul>
+          <li>Async report: instant ack, background search + email</li>
+          <li>Match operator demand to specific aircraft types</li>
+          <li>Revisit system-of-record if volume passes ~800/mo</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer reveal">
+    <p><b>Decision owner:</b> Brent Cowan · <b>Reviewed by:</b> the five-lens council · <b>Supersedes:</b> the open "Make vs. code" question from the Phase 1 sketch. Revisit when monthly lead volume or Places latency materially changes.</p>
+  </div>
+
+</div>

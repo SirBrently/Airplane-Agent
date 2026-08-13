@@ -50,8 +50,48 @@ package.json
 | `GET /preview` | Full preview page with live widget |
 | `POST /stream` | Streaming AI endpoint (SSE) — accepts `{ message, sessionId }` |
 | `POST /webhook` | Non-streaming fallback (Jotform compatible) |
+| `POST /lead` | **Leaseback Inquiry Funnel (Phase 1)** — lead intake + local operator search & report |
+| `GET /email-preview?type=day1\|planning` | Preview the §4 follow-up email templates |
 | `GET /health` | Health check |
 | `GET /img?url=...` | Image proxy for CDN hotlink bypass |
+
+---
+
+## Leaseback Inquiry Funnel — `POST /lead`
+
+Turns a Jotform leaseback submission into a ranked local operator report (`lead-engine.js`).
+
+**Input** — authenticate with the `x-jotform-secret` header **or** a `?secret=` query param (so Jotform's native webhook, which can't set headers, can post directly). Accepts a raw Jotform body (with `rawRequest`) or clean JSON:
+
+```json
+{ "firstName": "Jane", "zip": "80112", "email": "jane@example.com", "goal": "leaseback + training", "source": "fb-campaign" }
+```
+
+**Direct Jotform wiring (no middleware):** in Jotform → Settings → Integrations → Webhooks, set the URL to:
+
+```
+https://jetswest-relay-production.up.railway.app/lead?secret=YOUR_JOTFORM_SECRET
+```
+
+Jotform posts its `rawRequest` body; the endpoint parses first name / ZIP / email / goal out of it automatically.
+
+**What it does** (spec §2/§3/§6):
+0. **Suggests matching JetsWest aircraft first** — goal-aware picks from inventory (`gojetswest.com`) a prospect could buy and put on leaseback, shown ahead of the operator list.
+1. Geocodes the ZIP → lat/long.
+2. Finds public-use airports within the radius.
+3. Searches nearby operators via Google Places — flight schools, aircraft rental, flying clubs, FBOs, aircraft management.
+4. Enriches (website/phone), filters out maintenance-/fuel-/helicopter-only and off-target businesses.
+5. Ranks each **Strong Potential Fit / Possible Fit / Secondary Prospect** with a reason.
+6. Radius auto-expands **50 → 75 → 100 mi** until at least 5 viable operators are found.
+7. **Emails** the branded report to the prospect (if an email provider is configured).
+8. **Persists** the lead + upserts operators into Airtable (if configured) — §6 master DB.
+9. Returns JSON (`operators[]`, `delivery`, `reportHtml`, `reportText`) — add `?format=html` for the branded report directly, or `?dry=1` to run the search **without** emailing or writing to Airtable.
+
+The email and Airtable steps are **best-effort and optional**: with no keys set, `/lead` behaves exactly as before (returns the report). Errors in either step are captured in the `delivery` field, never failing the request.
+
+**Credibility rule:** operators are labelled *potential* fits only; every report discloses that current demand has **not** been verified by Jets West.
+
+> Airport identifiers are best-effort from Places today; `findAirports()` in `lead-engine.js` is isolated so an authoritative FAA/NASR dataset can be dropped in later.
 
 ---
 
@@ -78,6 +118,18 @@ Copy everything between `<!-- START WIDGET -->` and `<!-- END WIDGET -->` in `so
 ```
 ANTHROPIC_API_KEY=your_key_here
 JOTFORM_SECRET=jetswest_webhook_2024
+GOOGLE_PLACES_API_KEY=your_google_places_key   # required for POST /lead
+
+# Optional — POST /lead emails the report if an email provider is set:
+RESEND_API_KEY=your_resend_key                 # or SENDGRID_API_KEY
+LEAD_EMAIL_FROM=sophie@gojetswest.com          # verified sender address
+
+# Optional — POST /lead stores leads + operators (spec §6) if set:
+AIRTABLE_TOKEN=your_airtable_pat
+AIRTABLE_BASE_ID=appXXXXXXXXXXXXXX
+AIRTABLE_OPERATORS_TABLE=Operators             # optional, this is the default
+AIRTABLE_LEADS_TABLE=Leads                     # optional, this is the default
+
 PORT=3000
 ```
 
