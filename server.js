@@ -7,6 +7,7 @@ const { runLeadSearch, renderReportHTML, renderReportText } = require('./lead-en
 const email = require('./email');
 const airtable = require('./airtable');
 const templates = require('./templates');
+const { INVENTORY, findMatchingAircraft } = require('./inventory');
 
 const app = express();
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -38,26 +39,6 @@ function pruneSessions() {
   }
 }
 setInterval(pruneSessions, 15 * 60 * 1000);
-
-const INVENTORY = [
-  { name: 'Challenger 3500', year: '2025', price: '$29M', category: 'Large Cabin Jet', keywords: ['challenger 3500', 'challenger'], specs: ['170.1 hrs TT', '136 Landings', 'Ultra-Long-Range', 'New Delivery'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Bombardier_BD-100-1A10_Challenger_300_AN1704544.jpg/330px-Bombardier_BD-100-1A10_Challenger_300_AN1704544.jpg' },
-  { name: 'Falcon 900LX', year: '2012', price: '$19M', category: 'Large Cabin Trijet', keywords: ['falcon 900', 'falcon 900lx', 'falcon'], specs: ['14 Passengers', 'MSP Gold Engines', 'Large Cabin', 'Trijet'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Spanish_Air_Force_Dassault_Falcon_900B.jpg/330px-Spanish_Air_Force_Dassault_Falcon_900B.jpg' },
-  { name: 'Learjet 60XR', year: '2008', price: '$1.9M', category: 'Midsize Jet', keywords: ['learjet 60', 'learjet 60xr', 'learjet'], specs: ['3,460 TT', '6 Passengers', 'Mach 0.81', 'Midsize Jet'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Bombardier.learjet60.oe-gtf.arp.jpg/330px-Bombardier.learjet60.oe-gtf.arp.jpg' },
-  { name: 'Beechjet 400', year: '1988', price: '$875K', category: 'Light Jet', keywords: ['beechjet 400', 'beechjet'], specs: ['4,890 TT', 'Garmin Avionics', '7 Passengers', 'Light Jet'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/T-1A_Jayhawk.jpg/330px-T-1A_Jayhawk.jpg' },
-  { name: 'Citation II', year: '1982', price: '$695K', category: 'Light Jet', keywords: ['citation ii', 'citation 2'], specs: ['10 Seats', 'Low-Time Engines', '10% Down Financing', 'Light Jet'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Cessna_550b_citation_bravo_cs-dhr_arp.jpg/330px-Cessna_550b_citation_bravo_cs-dhr_arp.jpg' },
-  { name: 'Citation 501SP',year: '1977', price: '$685K / $4,950/mo', category: 'Entry Jet', keywords: ['citation 501', '501sp'], specs: ['6,847 TT', 'Garmin Glass Panel', 'Financing Available', 'Entry Jet'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/CN_Air_Cessna_501_Citation_I_SP.jpg/330px-CN_Air_Cessna_501_Citation_I_SP.jpg' },
-  { name: 'Citation I/SP', year: '1977', price: '$885K', category: 'Entry Jet', keywords: ['citation i/sp', 'citation i'], specs: ['6,242 TT', 'Low-Time Engines', 'Entry Jet', 'Classic'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/CN_Air_Cessna_501_Citation_I_SP.jpg/330px-CN_Air_Cessna_501_Citation_I_SP.jpg' },
-  { name: 'Piper Meridian', year: '1988', price: '$995K', category: 'Turboprop', keywords: ['meridian', 'piper meridian'], specs: ['2,761 TT', 'Financing Available', 'Single-Engine Turboprop', '5 Passengers'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Piper_PA-46-500TP_Malibu_Meridian_AN1805813.jpg/330px-Piper_PA-46-500TP_Malibu_Meridian_AN1805813.jpg' },
-  { name: 'Seneca II', year: '1980', price: '$199,600', category: 'Twin Piston', keywords: ['seneca ii', 'seneca'], specs: ['4,474 TT', 'FIKI Certified', 'Twin Piston', '6 Passengers'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Piper_PA-34_Naples_run_%28cropped%29.jpg/330px-Piper_PA-34_Naples_run_%28cropped%29.jpg' },
-  { name: 'Cessna 182 Skylane', year: '1979', price: '$189,500', category: 'Single Piston', keywords: ['skylane', 'cessna 182', '182 skylane'], specs: ['3,709 TT', 'Avidyne/Garmin', '4 Passengers', 'Single Piston'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Cessna182t_skylane_n2231f_cotswoldairshow_2010_arp.jpg/330px-Cessna182t_skylane_n2231f_cotswoldairshow_2010_arp.jpg' },
-  { name: 'Beechcraft S35 Bonanza', year: '1965', price: '$99,500', category: 'Classic Piston', keywords: ['bonanza', 's35 bonanza', 'beechcraft s35'], specs: ['6,952 TT', 'V-Tail Classic', 'Single Piston', '4 Passengers'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Beech_Bonanza_Takeoff_%285517383917%29.jpg/330px-Beech_Bonanza_Takeoff_%285517383917%29.jpg' },
-  { name: 'Robinson R-44', year: '2002', price: '$198,000', category: 'Helicopter', keywords: ['robinson r-44', 'r-44', 'r44', 'robinson'], specs: ['1,885 hrs', '1,000 Blade Hrs Remaining', 'Helicopter', '3 Passengers'], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Robinson_R44_II_%28cropped%29.jpg/330px-Robinson_R44_II_%28cropped%29.jpg' },
-];
-
-function findMatchingAircraft(text) {
-  const lower = text.toLowerCase();
-  return INVENTORY.filter(a => a.keywords.some(kw => lower.includes(kw))).slice(0, 3);
-}
 
 const SYSTEM_PROMPT = `You are the voice of JetsWest Aviation — a premier aviation brokerage with over 50 years of experience buying and selling private aircraft. You speak on behalf of Stan Snyder and the JetsWest team.
 

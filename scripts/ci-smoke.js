@@ -60,4 +60,13 @@ const pp = templates.renderPlanningPackage({ firstName: 'Jane', planningPackageU
 ok(/tax or legal/i.test(pp.html), 'planning package must defer tax/legal to CPA/attorney');
 ok(/potential/i.test(pp.html), 'planning package must carry the potential-fit disclosure');
 
+// 6. Inventory matcher leads with goal-appropriate JetsWest aircraft.
+const { matchLeasebackAircraft } = require('../inventory');
+const trainMatches = matchLeasebackAircraft('primary flight training and rental');
+ok(trainMatches.length > 0 && /Piston/.test(trainMatches[0].category), 'training goal should surface piston trainers first');
+ok(trainMatches.every((m) => m.url.includes('gojetswest.com')), 'inventory matches must link to gojetswest.com');
+ok(matchLeasebackAircraft('part 135 charter revenue').length > 0, 'charter goal should still return matches');
+const invHtml = renderReportHTML({ ...result, inventoryMatches: trainMatches });
+ok(/Aircraft to consider from JetsWest/.test(invHtml) && /gojetswest\.com/.test(invHtml), 'report should lead with the inventory section');
+
 console.log(`ci-smoke: ${checks} assertions passed`);

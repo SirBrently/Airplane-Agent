@@ -76,6 +76,7 @@ https://jetswest-relay-production.up.railway.app/lead?secret=YOUR_JOTFORM_SECRET
 Jotform posts its `rawRequest` body; the endpoint parses first name / ZIP / email / goal out of it automatically.
 
 **What it does** (spec §2/§3/§6):
+0. **Suggests matching JetsWest aircraft first** — goal-aware picks from inventory (`gojetswest.com`) a prospect could buy and put on leaseback, shown ahead of the operator list.
 1. Geocodes the ZIP → lat/long.
 2. Finds public-use airports within the radius.
 3. Searches nearby operators via Google Places — flight schools, aircraft rental, flying clubs, FBOs, aircraft management.

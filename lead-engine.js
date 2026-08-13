@@ -21,6 +21,8 @@
 // aircraft". Everything here is labelled a *Potential* fit, and every report
 // discloses that current demand has not been verified by Jets West.
 
+const { matchLeasebackAircraft } = require('./inventory');
+
 const GEOCODE_URL = 'https://maps.googleapis.com/maps/api/geocode/json';
 const TEXTSEARCH_URL = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
 const DETAILS_URL = 'https://maps.googleapis.com/maps/api/place/details/json';
@@ -348,6 +350,7 @@ async function runLeadSearch(lead, apiKey) {
     radiusExpanded: radiusMiles > RADIUS_STEPS[0],
     airportsFound: airports.length,
     operatorsFound: operators.length,
+    inventoryMatches: matchLeasebackAircraft(lead.goal), // JetsWest aircraft to consider first
     operators: reported,
     generatedAt: verifiedAt,
     demandVerified: false, // credibility rule (§2)
@@ -430,6 +433,27 @@ function renderReportHTML(result) {
     </td></tr>`;
   }).join('');
 
+  // Matching JetsWest inventory to consider first (spec: suggest our aircraft).
+  const inv = result.inventoryMatches || [];
+  const invCards = inv.map((a) => `
+    <tr><td style="padding:0 0 12px 0">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0d1a2b;border:1px solid #1c2f47;border-radius:12px">
+        <tr><td style="padding:14px 18px">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td style="font:600 16px/1.3 Arial,sans-serif;color:#eaf2ff">${esc(a.name)} <span style="color:#8fa6c2;font-weight:400">(${esc(a.year)})</span></td>
+            <td align="right" style="font:700 15px/1 Arial,sans-serif;color:#d4af37;white-space:nowrap">${esc(a.price)}</td>
+          </tr></table>
+          <div style="font:400 13px/1.5 Arial,sans-serif;color:#9fb3cc;margin-top:6px">${esc(a.category)} &nbsp;·&nbsp; ${a.specs.map(esc).join(' · ')}</div>
+          <div style="font:400 13px/1.6 Arial,sans-serif;color:#8fa6c2;margin-top:8px">${esc(a.reason)}</div>
+          <div style="font:400 13px/1.6 Arial,sans-serif;margin-top:10px"><a href="${esc(a.url)}" style="color:#9ec5ff;text-decoration:none">View at gojetswest.com →</a></div>
+        </td></tr>
+      </table>
+    </td></tr>`).join('');
+  const invSection = inv.length ? `
+      <tr><td style="padding:6px 4px 10px;font:700 12px/1 Arial,sans-serif;letter-spacing:2px;color:#d4af37;text-transform:uppercase">Aircraft to consider from JetsWest</td></tr>
+      <tr><td><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${invCards}</table></td></tr>
+      <tr><td style="padding:12px 4px 10px;font:700 12px/1 Arial,sans-serif;letter-spacing:2px;color:#d4af37;text-transform:uppercase">Local operators who could fly it</td></tr>` : '';
+
   const expandNote = result.radiusExpanded
     ? ` We widened the search to ${result.searchRadiusMiles} miles to bring you a strong set of options.`
     : '';
@@ -447,12 +471,13 @@ function renderReportHTML(result) {
         <div style="font:400 14px/1.6 Arial,sans-serif;color:#9fb3cc;margin-top:8px">${where}</div>
       </td></tr>
       <tr><td style="padding:0 4px 20px;font:400 15px/1.65 Arial,sans-serif;color:#c6d5ea">
-        ${hello} thanks for reaching out to Jets West. We searched your local market
-        within ${result.searchRadiusMiles} miles and found ${result.operators.length}
-        aviation ${result.operators.length === 1 ? 'operator' : 'operators'} that could be a fit for an
-        aircraft leaseback.${expandNote} No action needed on your part — review the list below,
-        and if anything stands out, <strong style="color:#eaf2ff">we’ll make the introductions for you</strong>.
+        ${hello} thanks for reaching out to Jets West. Here’s what we found for you:
+        ${inv.length ? 'aircraft from our own inventory that suit a leaseback, plus ' : ''}${result.operators.length}
+        local ${result.operators.length === 1 ? 'operator' : 'operators'} within ${result.searchRadiusMiles} miles
+        who could put one to work.${expandNote} No action needed on your part — if anything stands out,
+        <strong style="color:#eaf2ff">we’ll make the introductions for you</strong>.
       </td></tr>
+      ${invSection}
       <tr><td><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${cards}</table></td></tr>
       <tr><td style="padding:8px 4px 4px">
         <a href="${LEASEBACK_OVERVIEW_URL}" style="display:inline-block;font:600 14px/1 Arial,sans-serif;color:#08131f;background:#d4af37;padding:13px 22px;border-radius:8px;text-decoration:none">How Jets West leasebacks work →</a>
@@ -477,7 +502,16 @@ function renderReportText(result) {
   lines.push('JETS WEST AVIATION — Your Local Leaseback Opportunity Report');
   lines.push(`${p.city ? `${p.city}, ${p.state}` : `ZIP ${p.zip}`} · within ${result.searchRadiusMiles} miles`);
   lines.push('');
-  lines.push(`${p.firstName ? `Hi ${p.firstName},` : 'Hello,'} we searched your local market and found ${result.operators.length} potential leaseback operator(s):`);
+  const inv = result.inventoryMatches || [];
+  if (inv.length) {
+    lines.push('AIRCRAFT TO CONSIDER FROM JETSWEST:');
+    inv.forEach((a) => {
+      lines.push(`  • ${a.name} (${a.year}) — ${a.price} · ${a.category}`);
+      lines.push(`    ${a.reason}  gojetswest.com`);
+    });
+    lines.push('');
+  }
+  lines.push(`${p.firstName ? `Hi ${p.firstName},` : 'Hello,'} we also searched your local market and found ${result.operators.length} potential leaseback operator(s):`);
   lines.push('');
   result.operators.forEach((op, i) => {
     lines.push(`${i + 1}. ${op.name}  [${op.fitRating}]`);
