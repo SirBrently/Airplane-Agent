@@ -5,6 +5,8 @@
 
 const assert = require('node:assert');
 const { renderReportHTML, renderReportText, haversineMiles } = require('../lead-engine');
+const email = require('../email');
+const airtable = require('../airtable');
 
 let checks = 0;
 const ok = (cond, msg) => { assert.ok(cond, msg); checks++; };
@@ -42,5 +44,10 @@ const text = renderReportText(result);
 ok(!/\(KAPA\)\s*\(KAPA\)/.test(text), 'airport identifier should not double when present in name');
 ok(/Rocky Mountain Metro \(KBJC\)/.test(text), 'airport identifier should append when missing from name');
 ok(/not verified/i.test(text), 'text report must include the disclosure');
+
+// 4. Glue modules must load and degrade gracefully with no env keys set.
+ok(email.isConfigured() === false, 'email should report unconfigured with no keys');
+ok(airtable.isConfigured() === false, 'airtable should report unconfigured with no keys');
+ok(typeof email.sendReport === 'function' && typeof airtable.saveLeadRun === 'function', 'glue functions should be exported');
 
 console.log(`ci-smoke: ${checks} assertions passed`);

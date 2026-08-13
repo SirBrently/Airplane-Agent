@@ -4,6 +4,8 @@ const cors = require('cors');
 const https = require('https');
 const Anthropic = require('@anthropic-ai/sdk');
 const { runLeadSearch, renderReportHTML, renderReportText } = require('./lead-engine');
+const email = require('./email');
+const airtable = require('./airtable');
 
 const app = express();
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -724,13 +726,45 @@ app.post('/lead', async (req, res) => {
     const result = await runLeadSearch(lead, process.env.GOOGLE_PLACES_API_KEY);
     console.log(`[lead] radius=${result.searchRadiusMiles}mi operators=${result.operatorsFound} reported=${result.operators.length}`);
 
+    const reportHtml = renderReportHTML(result);
+
+    // Best-effort glue (spec §3 email + §6 storage). Never fails the request:
+    // each step runs only if its keys are set, and errors are captured, not thrown.
+    // Add ?dry=1 to compute the report without emailing or writing to Airtable.
+    const delivery = { dryRun: req.query.dry === '1', emailed: false, email: null, airtable: null };
+    if (!delivery.dryRun) {
+      if (email.isConfigured() && result.prospect.email) {
+        try {
+          delivery.email = await email.sendReport({
+            to: result.prospect.email,
+            subject: 'Your local leaseback opportunity report — Jets West',
+            html: reportHtml,
+          });
+          delivery.emailed = true;
+        } catch (e) {
+          delivery.email = { error: e.message };
+          console.error('[lead] email error:', e.message);
+        }
+      }
+      if (airtable.isConfigured()) {
+        try {
+          delivery.airtable = await airtable.saveLeadRun(result, { emailed: delivery.emailed });
+        } catch (e) {
+          delivery.airtable = { error: e.message };
+          console.error('[lead] airtable error:', e.message);
+        }
+      }
+    }
+    console.log(`[lead] emailed=${delivery.emailed} airtable=${delivery.airtable ? (delivery.airtable.leadId ? 'saved' : 'partial') : 'off'}`);
+
     if (req.query.format === 'html') {
       res.set('Content-Type', 'text/html; charset=utf-8');
-      return res.send(renderReportHTML(result));
+      return res.send(reportHtml);
     }
     res.json({
       ...result,
-      reportHtml: renderReportHTML(result),
+      delivery,
+      reportHtml,
       reportText: renderReportText(result),
     });
   } catch (err) {
