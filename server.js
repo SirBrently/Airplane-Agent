@@ -132,6 +132,63 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'jetswest-relay' });
 });
 
+// TEMP diagnostic (remove after go-live). Reports MASKED info about the stored
+// Google key + a live Google status, so we can confirm the env var without
+// exposing the secret. Requires the shared secret via ?secret=.
+app.get('/key-check', async (req, res) => {
+  if (req.query.secret !== process.env.JOTFORM_SECRET) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  const k = process.env.GOOGLE_PLACES_API_KEY || '';
+  const info = {
+    present: k.length > 0,
+    length: k.length,
+    expectedLength: 39,
+    first4: k.slice(0, 4),
+    last5: k.slice(-5),
+    hasWhitespace: /\s/.test(k),
+    hasQuotes: /["']/.test(k),
+  };
+  try {
+    const r = await fetch(
+      'https://maps.googleapis.com/maps/api/geocode/json?address=80112&key=' + encodeURIComponent(k)
+    );
+    const j = await r.json();
+    info.googleStatus = j.status;
+    info.googleError = j.error_message || null;
+  } catch (e) {
+    info.googleStatus = 'FETCH_ERROR';
+    info.googleError = e.message;
+  }
+  res.json(info);
+});
+
+// TEMP browser-testable lead run (remove after go-live). Lets us run a full
+// /lead search from a browser URL — no PowerShell needed. GET /lead-html?secret=..&zip=80112
+app.get('/lead-html', async (req, res) => {
+  if (req.query.secret !== process.env.JOTFORM_SECRET) {
+    return res.status(401).send('Unauthorized');
+  }
+  if (!process.env.GOOGLE_PLACES_API_KEY) {
+    return res.status(500).send('GOOGLE_PLACES_API_KEY is not configured');
+  }
+  const lead = parseLeadBody({
+    firstName: req.query.firstName || 'Test',
+    zip: req.query.zip,
+    email: req.query.email,
+    goal: req.query.goal || 'flight training leaseback',
+  });
+  if (!lead.zip) {
+    return res.status(400).send('A valid 5-digit US ZIP code is required (add ?zip=80112)');
+  }
+  try {
+    const result = await runLeadSearch(lead, process.env.GOOGLE_PLACES_API_KEY);
+    res.set('Content-Type', 'text/html; charset=utf-8').send(renderReportHTML(result));
+  } catch (err) {
+    res.status(502).send('Operator search failed: ' + err.message);
+  }
+});
+
 // Preview the follow-up email templates in a browser: /email-preview?type=day1|planning
 app.get('/email-preview', (req, res) => {
   const type = (req.query.type || 'day1').toLowerCase();
