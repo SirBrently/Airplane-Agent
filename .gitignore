@@ -4,3 +4,4 @@ server.log
 server-err.log
 sophie_preview_email.txt
 .playwright-mcp/
+scratchpad/
