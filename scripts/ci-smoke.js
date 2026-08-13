@@ -50,4 +50,14 @@ ok(email.isConfigured() === false, 'email should report unconfigured with no key
 ok(airtable.isConfigured() === false, 'airtable should report unconfigured with no keys');
 ok(typeof email.sendReport === 'function' && typeof airtable.saveLeadRun === 'function', 'glue functions should be exported');
 
+// 5. Follow-up templates render fully, stay credibility-safe, leak no merge tags.
+const templates = require('../templates');
+const d1 = templates.renderDay1({ firstName: 'Jane', operatorCount: 7, location: 'Centennial, CO' });
+ok(d1.subject && d1.html.startsWith('<!DOCTYPE') && d1.text.includes('Jane'), 'day-1 email should render subject/html/text');
+ok(!/\{\{|\}\}/.test(d1.html), 'day-1 email must not leak merge placeholders');
+ok(/potential/i.test(d1.html), 'day-1 email must carry the potential-fit disclosure');
+const pp = templates.renderPlanningPackage({ firstName: 'Jane', planningPackageUrl: 'https://example.com/pkg' });
+ok(/tax or legal/i.test(pp.html), 'planning package must defer tax/legal to CPA/attorney');
+ok(/potential/i.test(pp.html), 'planning package must carry the potential-fit disclosure');
+
 console.log(`ci-smoke: ${checks} assertions passed`);

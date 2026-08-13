@@ -51,6 +51,7 @@ package.json
 | `POST /stream` | Streaming AI endpoint (SSE) — accepts `{ message, sessionId }` |
 | `POST /webhook` | Non-streaming fallback (Jotform compatible) |
 | `POST /lead` | **Leaseback Inquiry Funnel (Phase 1)** — lead intake + local operator search & report |
+| `GET /email-preview?type=day1\|planning` | Preview the §4 follow-up email templates |
 | `GET /health` | Health check |
 | `GET /img?url=...` | Image proxy for CDN hotlink bypass |
 

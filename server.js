@@ -6,6 +6,7 @@ const Anthropic = require('@anthropic-ai/sdk');
 const { runLeadSearch, renderReportHTML, renderReportText } = require('./lead-engine');
 const email = require('./email');
 const airtable = require('./airtable');
+const templates = require('./templates');
 
 const app = express();
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -148,6 +149,16 @@ async function generateSuggestions(reply) {
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'jetswest-relay' });
+});
+
+// Preview the follow-up email templates in a browser: /email-preview?type=day1|planning
+app.get('/email-preview', (req, res) => {
+  const type = (req.query.type || 'day1').toLowerCase();
+  const sample =
+    type === 'planning'
+      ? templates.renderPlanningPackage({ firstName: 'Jane', planningPackageUrl: 'https://gojetswest.com/leaseback' })
+      : templates.renderDay1({ firstName: 'Jane', operatorCount: 7, location: 'Centennial, CO' });
+  res.set('Content-Type', 'text/html; charset=utf-8').send(sample.html);
 });
 
 app.get('/preview', (req, res) => {

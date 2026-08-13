@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js && node --check lead-engine.js && node --check email.js && node --check airtable.js && node --check test.js && node --check scripts/ci-smoke.js",
+    "check": "node --check server.js && node --check lead-engine.js && node --check email.js && node --check airtable.js && node --check templates.js && node --check test.js && node --check scripts/ci-smoke.js",
     "test:ci": "node scripts/ci-smoke.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
