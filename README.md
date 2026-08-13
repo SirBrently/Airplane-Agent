@@ -60,11 +60,19 @@ package.json
 
 Turns a Jotform leaseback submission into a ranked local operator report (`lead-engine.js`).
 
-**Input** — send `x-jotform-secret` header. Accepts a raw Jotform body (with `rawRequest`) or clean JSON:
+**Input** — authenticate with the `x-jotform-secret` header **or** a `?secret=` query param (so Jotform's native webhook, which can't set headers, can post directly). Accepts a raw Jotform body (with `rawRequest`) or clean JSON:
 
 ```json
 { "firstName": "Jane", "zip": "80112", "email": "jane@example.com", "goal": "leaseback + training", "source": "fb-campaign" }
 ```
+
+**Direct Jotform wiring (no middleware):** in Jotform → Settings → Integrations → Webhooks, set the URL to:
+
+```
+https://jetswest-relay-production.up.railway.app/lead?secret=YOUR_JOTFORM_SECRET
+```
+
+Jotform posts its `rawRequest` body; the endpoint parses first name / ZIP / email / goal out of it automatically.
 
 **What it does** (spec §2/§3/§6):
 1. Geocodes the ZIP → lat/long.

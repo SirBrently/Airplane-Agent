@@ -709,7 +709,11 @@ function parseLeadBody(body) {
 }
 
 app.post('/lead', async (req, res) => {
-  if (req.headers['x-jotform-secret'] !== process.env.JOTFORM_SECRET) {
+  // Accept the secret via header (Make/Zapier/curl) OR ?secret= query param, so
+  // Jotform's native webhook — which can't set custom headers — can post here
+  // directly with no middleware.
+  const providedSecret = req.headers['x-jotform-secret'] || req.query.secret;
+  if (providedSecret !== process.env.JOTFORM_SECRET) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   if (!process.env.GOOGLE_PLACES_API_KEY) {
