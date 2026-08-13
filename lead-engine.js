@@ -383,7 +383,8 @@ module.exports = { runLeadSearch, renderReportHTML, renderReportText, haversineM
 // §3 Prospect-facing report
 // ---------------------------------------------------------------------------
 
-const LEASEBACK_OVERVIEW_URL = 'https://www.gojetswest.com/leaseback';
+// TODO: repoint to a dedicated /leaseback page once it exists on the site.
+const LEASEBACK_OVERVIEW_URL = 'https://www.gojetswest.com';
 const BOOKING_URL = 'https://gojetswest.com/booking-calander';
 
 const FIT_COLORS = {
