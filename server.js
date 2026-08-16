@@ -142,6 +142,27 @@ app.get('/email-preview', (req, res) => {
   res.set('Content-Type', 'text/html; charset=utf-8').send(sample.html);
 });
 
+// TEMP diagnostic (remove after email go-live). Confirms the email env vars are
+// visible to the app, without exposing the key. Requires the shared secret.
+app.get('/email-check', (req, res) => {
+  if (req.query.secret !== process.env.JOTFORM_SECRET) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  const key = process.env.RESEND_API_KEY || '';
+  const sg = process.env.SENDGRID_API_KEY || '';
+  const from = process.env.LEAD_EMAIL_FROM || '';
+  res.json({
+    resendKeyPresent: key.length > 0,
+    resendKeyPrefix: key.slice(0, 3),
+    resendKeyLooksValid: key.startsWith('re_'),
+    sendgridKeyPresent: sg.length > 0,
+    fromPresent: from.length > 0,
+    from,
+    provider: email.provider(),
+    isConfigured: email.isConfigured(),
+  });
+});
+
 app.get('/preview', (req, res) => {
   res.send(`<!DOCTYPE html>
 <html lang="en">
