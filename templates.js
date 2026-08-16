@@ -9,7 +9,7 @@
 // The scheduled follow-up job (roadmap "Next") renders one of these and hands
 // { subject, html } straight to email.sendReport().
 
-const BOOKING_URL = process.env.BOOKING_URL || 'https://gojetswest.com/booking-calander';
+const BOOKING_URL = process.env.BOOKING_URL || 'https://gojetswest.com/booking-calendar';
 
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>

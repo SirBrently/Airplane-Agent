@@ -385,7 +385,7 @@ module.exports = { runLeadSearch, renderReportHTML, renderReportText, haversineM
 
 // TODO: repoint to a dedicated /leaseback page once it exists on the site.
 const LEASEBACK_OVERVIEW_URL = 'https://www.gojetswest.com';
-const BOOKING_URL = 'https://gojetswest.com/booking-calander';
+const BOOKING_URL = process.env.BOOKING_URL || 'https://gojetswest.com/booking-calendar';
 
 const FIT_COLORS = {
   'Strong Potential Fit': '#31c48d',
