@@ -8,6 +8,7 @@ const email = require('./email');
 const airtable = require('./airtable');
 const templates = require('./templates');
 const { INVENTORY, findMatchingAircraft } = require('./inventory');
+const { computeLeaseback, parsePrice, DEFAULTS } = require('./calculator');
 
 const app = express();
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -93,6 +94,13 @@ SELLER GUIDANCE
 - Guide sellers toward JetsWest's 30-day listing guarantee. Emphasize the buyer network and marketing reach.
 - Always offer to schedule a Zoom call: gojetswest.com/booking-calendar
 
+LEASEBACK CALCULATOR & ECONOMICS
+When a client is exploring a leaseback (especially student pilots or first-time owners weighing "own vs. rent"), you can give them a rough, honest picture of the monthly economics — then hand them the interactive calculator for exact, adjustable numbers.
+- The full calculator lives at: https://jetswest-relay-production.up.railway.app/calculator — always offer it: "Want to see what this looks like for your budget? Run the numbers here: <link>". They can pick an aircraft or enter a price and adjust the assumptions live.
+- How the math works (use these DEFAULT assumptions so your ballparks stay consistent — tell the client they're adjustable): 20% down, 8.5% APR, 15-year term; estimated leaseback use ~40 hrs/month; net leaseback income ~$135/hr to the owner after the operator's cut; ~$900/mo owner-side fixed costs (insurance, hangar, subscriptions).
+- To ballpark: monthly loan payment on 80% of the price + $900 fixed = monthly cost; ~40 hrs × $135 = ~$5,400/mo estimated leaseback income; the difference is cash flow (positive) or out-of-pocket (negative). Example: a ~$190K Skylane financed leaves roughly a ~$1,200/mo payment; with ~$5,400 estimated leaseback income it can offset the payment and carrying costs — a rough illustration, not a promise.
+- HARD leaseback rules: ALWAYS call these figures rough estimates/illustrations, never guarantees. Real demand, hourly rates, and economics are confirmed with the operator before any commitment. Keep numbers directional and send them to the calculator (and a call) for specifics. Never promise financing rates. Defer all tax/depreciation/legal questions to their CPA or aviation attorney.
+
 FORMATTING RULES — always follow these
 - NEVER use markdown tables. Ever. Format inventory lists like this instead:
   ✈ **Learjet 60XR** (2008) — **$1.9M**
@@ -130,6 +138,135 @@ async function generateSuggestions(reply) {
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'jetswest-relay' });
+});
+
+// Leaseback estimate — JSON API. Body: { price, downPct, aprPct, termYears,
+// hoursPerMonth, ownerRatePerHour, fixedMonthly }. All optional except price.
+app.post('/leaseback', (req, res) => {
+  res.json(computeLeaseback(req.body || {}));
+});
+
+// Branded leaseback calculator page — pick an aircraft (or enter a price),
+// adjust the assumptions, and see the monthly picture. Linked from the report
+// and offered by Sophie. GET /calculator?price=190000
+app.get('/calculator', (req, res) => {
+  const opts = INVENTORY
+    .map((a) => {
+      const p = parsePrice(a.price);
+      return p > 0 ? `<option value="${p}">${a.name} (${a.year}) — ${a.price}</option>` : '';
+    })
+    .join('');
+  const prefill = Math.max(0, parseInt(req.query.price, 10) || 0) || '';
+  res.set('Content-Type', 'text/html; charset=utf-8').send(`<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leaseback Calculator — Jets West</title>
+<style>
+  *{box-sizing:border-box} body{margin:0;background:#060e1a;color:#eaf2ff;font:400 15px/1.6 Arial,Helvetica,sans-serif}
+  .wrap{max-width:760px;margin:0 auto;padding:28px 18px 60px}
+  .brand{font:700 12px/1 Arial;letter-spacing:3px;color:#d4af37}
+  h1{font-size:26px;margin:10px 0 4px} .sub{color:#9fb3cc;margin:0 0 22px}
+  .card{background:#0d1a2b;border:1px solid #1c2f47;border-radius:14px;padding:20px}
+  label{display:block;font:600 12px/1.4 Arial;color:#9fb3cc;margin:0 0 5px;text-transform:uppercase;letter-spacing:.5px}
+  select,input{width:100%;padding:11px 12px;background:#081422;border:1px solid #26405e;border-radius:9px;color:#eaf2ff;font-size:15px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
+  .full{grid-column:1/-1}
+  .btn{margin-top:18px;width:100%;padding:14px;background:#d4af37;color:#08131f;border:none;border-radius:10px;font:700 15px Arial;cursor:pointer}
+  #results{display:none;margin-top:22px}
+  .big{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .stat{background:#0d1a2b;border:1px solid #1c2f47;border-radius:12px;padding:16px;text-align:center}
+  .stat .v{font:700 22px/1.1 Arial;margin:4px 0} .stat .k{font:600 11px/1.3 Arial;color:#9fb3cc;text-transform:uppercase;letter-spacing:.5px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .mini{background:#0a1524;border:1px solid #18293e;border-radius:10px;padding:11px 13px;font-size:13px;color:#c6d5ea}
+  .mini b{color:#eaf2ff}
+  .summary{margin-top:14px;padding:13px 15px;background:#10233a;border-left:3px solid #d4af37;border-radius:8px;color:#dbe7f6;font-size:14px}
+  .cta{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap}
+  .cta a{display:inline-block;padding:12px 18px;border-radius:9px;text-decoration:none;font:600 14px Arial}
+  .cta .gold{background:#d4af37;color:#08131f} .cta .ghost{border:1px solid #2b4260;color:#eaf2ff}
+  .disc{margin-top:20px;font-size:11.5px;line-height:1.6;color:#6b82a0;border-top:1px solid #14243a;padding-top:14px}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}.big{grid-template-columns:1fr}}
+</style></head>
+<body><div class="wrap">
+  <div class="brand">JETS WEST AVIATION</div>
+  <h1>Leaseback Calculator</h1>
+  <p class="sub">See what owning &amp; leasing back an aircraft could look like month to month.</p>
+  <div class="card">
+    <div class="grid">
+      <div class="full">
+        <label>Pick an aircraft (or enter a price below)</label>
+        <select id="aircraft" onchange="pickAircraft()">
+          <option value="">— choose from JetsWest inventory —</option>
+          ${opts}
+        </select>
+      </div>
+      <div class="full">
+        <label>Aircraft price ($)</label>
+        <input id="price" type="number" min="0" step="1000" value="${prefill}" oninput="calc()" placeholder="e.g. 190000">
+      </div>
+      <div><label>Down payment (%)</label><input id="downPct" type="number" min="0" max="100" step="1" value="${DEFAULTS.downPct * 100}" oninput="calc()"></div>
+      <div><label>Financing APR (%)</label><input id="aprPct" type="number" min="0" step="0.1" value="${DEFAULTS.aprPct * 100}" oninput="calc()"></div>
+      <div><label>Loan term (years)</label><input id="termYears" type="number" min="1" max="30" step="1" value="${DEFAULTS.termYears}" oninput="calc()"></div>
+      <div><label>Leaseback use (hrs/mo)</label><input id="hoursPerMonth" type="number" min="0" step="1" value="${DEFAULTS.hoursPerMonth}" oninput="calc()"></div>
+      <div><label>Net rate to you ($/hr)</label><input id="ownerRatePerHour" type="number" min="0" step="5" value="${DEFAULTS.ownerRatePerHour}" oninput="calc()"></div>
+      <div><label>Fixed costs ($/mo)</label><input id="fixedMonthly" type="number" min="0" step="50" value="${DEFAULTS.fixedMonthly}" oninput="calc()"></div>
+    </div>
+    <button class="btn" onclick="calc()">Calculate</button>
+  </div>
+
+  <div id="results">
+    <div class="big">
+      <div class="stat"><div class="k">Monthly payment</div><div class="v" id="r_pay">–</div></div>
+      <div class="stat"><div class="k">Est. leaseback income</div><div class="v" style="color:#31c48d" id="r_rev">–</div></div>
+      <div class="stat"><div class="k" id="r_netk">Net / month</div><div class="v" id="r_net">–</div></div>
+    </div>
+    <div class="row2">
+      <div class="mini">Down payment: <b id="r_down">–</b> · Financed: <b id="r_fin">–</b></div>
+      <div class="mini">Covers <b id="r_off">–</b> of monthly cost · Break-even: <b id="r_be">–</b> hrs/mo</div>
+    </div>
+    <div class="summary" id="r_sum"></div>
+    <div class="cta">
+      <a class="gold" href="https://gojetswest.com/booking-calendar">Book a call to run real numbers →</a>
+      <a class="ghost" href="https://www.gojetswest.com">JetsWest inventory</a>
+    </div>
+  </div>
+
+  <p class="disc">These figures are illustrative estimates using adjustable assumptions — not a quote, financing offer, or guarantee. Actual leaseback demand, hourly rates, and economics are confirmed with the operator before any commitment. Jets West does not provide tax, depreciation, or legal advice; your CPA and attorney run the final numbers.</p>
+</div>
+<script>
+  function g(id){return document.getElementById(id);}
+  function money(n){return '$'+Math.round(n).toLocaleString();}
+  function pickAircraft(){var s=g('aircraft');if(s.value){g('price').value=s.value;}calc();}
+  function calc(){
+    var b={
+      price:parseFloat(g('price').value)||0,
+      downPct:(parseFloat(g('downPct').value)||0)/100,
+      aprPct:(parseFloat(g('aprPct').value)||0)/100,
+      termYears:parseFloat(g('termYears').value)||0,
+      hoursPerMonth:parseFloat(g('hoursPerMonth').value)||0,
+      ownerRatePerHour:parseFloat(g('ownerRatePerHour').value)||0,
+      fixedMonthly:parseFloat(g('fixedMonthly').value)||0
+    };
+    if(!b.price){g('results').style.display='none';return;}
+    fetch('/leaseback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)})
+      .then(function(r){return r.json();}).then(render).catch(function(){});
+  }
+  function render(d){
+    g('results').style.display='block';
+    g('r_pay').textContent=money(d.monthlyPayment);
+    g('r_rev').textContent=money(d.estRevenue);
+    var pos=d.cashFlowPositive;
+    g('r_netk').textContent=pos?'Est. cash flow / month':'Out of pocket / month';
+    g('r_net').textContent=(pos?'+':'-')+money(Math.abs(d.netMonthly));
+    g('r_net').style.color=pos?'#31c48d':'#e0736d';
+    g('r_down').textContent=money(d.downPayment);
+    g('r_fin').textContent=money(d.financed);
+    g('r_off').textContent=d.offsetPercent+'%';
+    g('r_be').textContent=d.breakevenHours==null?'–':d.breakevenHours;
+    g('r_sum').textContent=d.summary;
+  }
+  window.onload=calc;
+</script>
+</body></html>`);
 });
 
 // Preview the follow-up email templates in a browser: /email-preview?type=day1|planning

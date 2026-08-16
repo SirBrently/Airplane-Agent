@@ -386,6 +386,7 @@ module.exports = { runLeadSearch, renderReportHTML, renderReportText, haversineM
 // TODO: repoint to a dedicated /leaseback page once it exists on the site.
 const LEASEBACK_OVERVIEW_URL = 'https://www.gojetswest.com';
 const BOOKING_URL = process.env.BOOKING_URL || 'https://gojetswest.com/booking-calendar';
+const CALCULATOR_URL = process.env.CALCULATOR_URL || 'https://jetswest-relay-production.up.railway.app/calculator';
 
 const FIT_COLORS = {
   'Strong Potential Fit': '#31c48d',
@@ -481,7 +482,10 @@ function renderReportHTML(result) {
       ${invSection}
       <tr><td><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${cards}</table></td></tr>
       <tr><td style="padding:8px 4px 4px">
-        <a href="${LEASEBACK_OVERVIEW_URL}" style="display:inline-block;font:600 14px/1 Arial,sans-serif;color:#08131f;background:#d4af37;padding:13px 22px;border-radius:8px;text-decoration:none">How Jets West leasebacks work →</a>
+        <a href="${CALCULATOR_URL}" style="display:inline-block;font:600 14px/1 Arial,sans-serif;color:#08131f;background:#d4af37;padding:13px 22px;border-radius:8px;text-decoration:none">See what this looks like for your budget →</a>
+      </td></tr>
+      <tr><td style="padding:10px 4px 4px">
+        <a href="${LEASEBACK_OVERVIEW_URL}" style="display:inline-block;font:600 14px/1 Arial,sans-serif;color:#eaf2ff;border:1px solid #2b4260;padding:12px 22px;border-radius:8px;text-decoration:none">How Jets West leasebacks work</a>
         &nbsp;&nbsp;
         <a href="${BOOKING_URL}" style="display:inline-block;font:600 14px/1 Arial,sans-serif;color:#eaf2ff;border:1px solid #2b4260;padding:12px 22px;border-radius:8px;text-decoration:none">Book a call</a>
       </td></tr>

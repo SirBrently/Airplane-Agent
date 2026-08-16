@@ -69,4 +69,16 @@ ok(matchLeasebackAircraft('part 135 charter revenue').length > 0, 'charter goal 
 const invHtml = renderReportHTML({ ...result, inventoryMatches: trainMatches });
 ok(/Aircraft to consider from JetsWest/.test(invHtml) && /gojetswest\.com/.test(invHtml), 'report should lead with the inventory section');
 
+// 7. Leaseback calculator: price parsing, sane math, disclosure, input clamping.
+const { computeLeaseback, parsePrice } = require('../calculator');
+ok(parsePrice('$695K') === 695000 && parsePrice('$29M') === 29000000 && parsePrice('$199,600') === 199600,
+  'parsePrice handles K/M suffixes and commas');
+const calc = computeLeaseback({ price: 190000 });
+ok(calc.monthlyPayment > 0 && calc.estRevenue > 0, 'calculator returns positive payment and revenue');
+ok(calc.netMonthly === calc.estRevenue - calc.monthlyCosts, 'calculator net = revenue minus costs');
+ok(/estimate, not a guarantee/i.test(calc.summary), 'calculator summary carries the estimate disclosure');
+const clamped = computeLeaseback({ price: -100, aprPct: 999, hoursPerMonth: 'abc' });
+ok(clamped.inputs.price === 0 && clamped.inputs.aprPct <= 0.5 && clamped.inputs.hoursPerMonth === 40,
+  'calculator clamps hostile / invalid input');
+
 console.log(`ci-smoke: ${checks} assertions passed`);
